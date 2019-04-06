@@ -8,6 +8,7 @@ from cfr.build_tree import GameTreeBuilder
 from cfr.constants import NUM_ACTIONS
 from cfr.game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from cfr.hand_evaluation import get_winners
+from cfr.utils import build_standard_deck
 
 try:
     from tqdm import tqdm
@@ -29,12 +30,12 @@ class Cfr:
         """
         self.game = game
 
-        if game.get_betting_type() != acpc.BettingType.LIMIT:
-            raise AttributeError('No-limit betting games not supported')
-
-        total_cards_count = game.get_num_hole_cards() + game.get_total_num_board_cards(game.get_num_rounds() - 1)
-        if total_cards_count > 5:
-            raise AttributeError('Only games with up to 5 cards are supported')
+        # if game.get_betting_type() != acpc.BettingType.LIMIT:
+        #     raise AttributeError('No-limit betting games not supported')
+        #
+        # total_cards_count = game.get_num_hole_cards() + game.get_total_num_board_cards(game.get_num_rounds() - 1)
+        # if total_cards_count > 5:
+        #     raise AttributeError('Only games with up to 5 cards are supported')
 
         game_tree_builder = GameTreeBuilder(game)
 
@@ -96,7 +97,7 @@ class Cfr:
             except NameError:
                 iterations_iterable = range(iterations)
 
-        deck = acpc.game_utils.generate_deck(self.game)
+        deck = build_standard_deck()
         for i in iterations_iterable:
             current_deck = list(deck)
             random.shuffle(current_deck)
