@@ -1,9 +1,10 @@
 import copy
 import itertools
 
-import acpc_python_client as acpc
-
 from cfr.game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
+
+# TODO: Remove dirty global Var
+_MAX_SUITS = 4
 
 
 class GameTreeBuilder:
@@ -41,16 +42,48 @@ class GameTreeBuilder:
     def __init__(self, game):
         self.game = game
 
+    # TODO: Use python list literals for speed.
+    def _build_standard_deck(self):
+        deck = []
+        for suit in range(4):
+            for rank in range(13):
+                deck.append(rank * _MAX_SUITS + suit)
+        return deck
+
+    def card_rank(self, card):
+        """Returns card rank from card's int representation.
+
+        Args:
+            card (int): Int representation of the card. This representation
+                        has each card rank of each suit represented by unique integer.
+
+        Returns:
+            int: Card rank as 0 based index.
+        """
+        return card // _MAX_SUITS
+
+    def card_suit(self, card):
+        """Returns card suit from card's int representation.
+
+        Args:
+            card (int): Int representation of the card. This representation
+                        has each card rank of each suit represented by unique integer.
+
+        Returns:
+            int: Card suit as 0 based index.
+        """
+        return card % _MAX_SUITS
+
     def build_tree(self):
         """Builds and returns the game tree."""
-        deck = acpc.game_utils.generate_deck(self.game)
+
+        deck = self._build_standard_deck()
 
         # First generate hole cards node which is only generated once at the beginning of the game
         root = HoleCardsNode(None, self.game.get_num_hole_cards())
         num_hole_cards = self.game.get_num_hole_cards()
         # combinations(iterable, length of tuple)
         hole_card_combinations = itertools.combinations(range(len(deck)), num_hole_cards)
-        # TODO: What kind of data structure is deck?
         for hole_cards_indexes in hole_card_combinations:
             hole_cards = tuple(map(lambda i: deck[i], hole_cards_indexes))
             next_deck = list(deck)
