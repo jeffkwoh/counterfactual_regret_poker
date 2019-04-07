@@ -2,7 +2,7 @@ import operator
 import random
 from functools import reduce
 
-import acpc_python_client as acpc
+# import acpc_python_client as acpc
 
 from cfr.build_tree import GameTreeBuilder
 from cfr.constants import NUM_ACTIONS
