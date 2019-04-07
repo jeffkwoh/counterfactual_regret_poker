@@ -1,7 +1,7 @@
 # from functools import reduce
 # TODO: RELATIVE IMPORTS WILL BREAK IN PYTHON 2.7
-from ..pypokerengine.engine.hand_evaluator import HandEvaluator
-from ..pypokerengine.engine.card import Card
+from pypokerengine.engine.hand_evaluator import HandEvaluator
+from pypokerengine.engine.card import Card
 
 # import acpc_python_client as acpc
 

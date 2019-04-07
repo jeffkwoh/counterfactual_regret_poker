@@ -4,11 +4,11 @@ from functools import reduce
 
 # import acpc_python_client as acpc
 
-from cfr.build_tree import GameTreeBuilder
-from cfr.constants import NUM_ACTIONS
-from cfr.game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
-from cfr.hand_evaluation import get_winners
-from cfr.utils import build_standard_deck
+from build_tree import GameTreeBuilder
+from constants import NUM_ACTIONS
+from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
+from hand_evaluation import get_winners
+from utils import build_standard_deck
 
 try:
     from tqdm import tqdm
@@ -171,7 +171,7 @@ class Cfr:
                          hole_cards, board_cards + [selected_board_cards], deck[num_board_cards:],
                          players_folded)
 
-    #TODO: Understand calculation of updated strategy probabilities.
+    # TODO: Understand calculation of updated strategy probabilities.
     @staticmethod
     def _update_node_strategy(node, realization_weight):
         """Update node strategy by normalizing regret sums."""

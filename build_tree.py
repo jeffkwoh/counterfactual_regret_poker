@@ -1,7 +1,7 @@
 import copy
 import itertools
 
-from cfr.game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
+from game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
 
 # TODO: Remove dirty global Var
 _MAX_SUITS = 4
@@ -85,14 +85,25 @@ class GameTreeBuilder:
         # combinations(iterable, length of tuple)
         hole_card_combinations = itertools.combinations(range(len(deck)), num_hole_cards)
         for hole_cards_indexes in hole_card_combinations:
-            hole_cards = tuple(map(lambda i: deck[i], hole_cards_indexes))
-            next_deck = list(deck)
-            for hole_card_index in hole_cards_indexes:
-                del next_deck[hole_card_index]
+            """
+            Needs to be sorted otherwise we'll run into key errors. 
+            Hole_cards is used as a key, and tuples are ordered.
+            """
+            hole_cards = tuple(sorted(map(lambda i: deck[i], hole_cards_indexes)))
+            next_deck = self.remove_hole_cards(deck, hole_cards_indexes)
+
             game_state = GameTreeBuilder.GameState(self.game, next_deck)
             # Start first game round with board cards node
+            # Tuple of hole_cards are used as child keys if this is preflop.
             self._generate_board_cards_node(root, hole_cards, game_state)
         return root
+
+    def remove_hole_cards(self, deck, hole_cards_indexes):
+        next_deck = list(deck)
+        # Delete the two Hole cards
+        del next_deck[hole_cards_indexes[0]]
+        del next_deck[hole_cards_indexes[1] - 1]
+        return next_deck
 
     def _generate_board_cards_node(self, parent, child_key, game_state):
         rounds_left = game_state.rounds_left
@@ -109,15 +120,17 @@ class GameTreeBuilder:
 
             for board_cards_idxs in board_card_combinations:
                 next_game_state = copy.deepcopy(game_state)
-                for board_card_index in board_cards_idxs:
-                    del next_game_state.deck[board_card_index]
+                # Nifty trick in countering change in list length because combinations are in lexicographic sorted order
+                for i, board_card_index in enumerate(board_cards_idxs):
+                    del next_game_state.deck[board_card_index - i]
                 board_cards = tuple(map(lambda i: deck[i], board_cards_idxs))
+                # def _generate_action_node(self, parent, child_key, game_state):
                 self._generate_action_node(new_node, board_cards, next_game_state)
 
     @staticmethod
     def _bets_settled(bets, players_folded):
-        non_folded_bets = filter(lambda bet: not players_folded[bet[0]], enumerate(bets))
-        non_folded_bets = list(map(lambda bet_enum: bet_enum[1], non_folded_bets))
+        non_folded_bets_filter = filter(lambda bet: not players_folded[bet[0]], enumerate(bets))
+        non_folded_bets = list(map(lambda bet_enum: bet_enum[1], non_folded_bets_filter))
         return non_folded_bets.count(non_folded_bets[0]) == len(non_folded_bets)
 
     def _generate_action_node(self, parent, child_key, game_state):

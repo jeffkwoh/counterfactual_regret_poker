@@ -1,4 +1,4 @@
-from cfr.constants import NUM_ACTIONS
+from constants import NUM_ACTIONS
 
 
 def _tree_str_rec(root, offset):
