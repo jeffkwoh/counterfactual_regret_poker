@@ -1,3 +1,5 @@
+import constants
+
 class Game:
     """Game definition."""
 
@@ -50,6 +52,20 @@ class Game:
         else:
             return 40
 
+    def get_max_raises_per_player_per_game(self, player_index):
+        """Returns maximum numbers of raises a player can make in the entire game.
+
+         Args:
+
+            player_index (int): Index of the player
+
+         Returns:
+
+            int: Number of bets/raises that may be made by a player in each game.
+
+         """
+        return constants.MAX_NUM_RAISES_PER_PLAYER_PER_GAME
+
     def get_betting_type(self):
         """Betting type of the game, that is either limited or no-limit.
 
@@ -95,7 +111,7 @@ class Game:
         # TODO Provide ACTUAL player info
         return 0
 
-    def get_max_raises(self, round_index):
+    def get_max_raises_per_street(self, round_index):
         """Returns number of bets/raises that may be made in given round.
 
         Args:
@@ -112,8 +128,8 @@ class Game:
             raise ValueError(
                 'Cannot retrieve max number of raises in round %s in game with %s rounds'
                 % (round_index, self.get_num_rounds()))
-        # TODO: CHANGE TO 4 AFTER BUCKETING.
-        return 1
+
+        return constants.MAX_NUM_RAISES_PER_PLAYER_PER_GAME
 
     def get_num_suits(self):
         """Returns number of card suits in the game.

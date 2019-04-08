@@ -166,7 +166,11 @@ class GameTreeBuilder:
         if not bets_settled:
             valid_actions.append(0)
         # TODO: Implement cs3243 logic.
-        if game_state.round_raise_count < self.game.get_max_raises(round_index):
+        if game_state.round_raise_count < self.game.get_max_raises_per_street(round_index) and \
+            (game_state.current_player == 0 and \
+                 game_state.p0_raise < self.game.get_max_raises_per_player_per_game(current_player)) or \
+                    (game_state.current_player == 1 and \
+                        game_state.p0_raise < self.game.get_max_raises_per_player_per_game(current_player)):
             valid_actions.append(2)
         for a in valid_actions:
             next_game_state = game_state.next_move_state()
@@ -178,6 +182,10 @@ class GameTreeBuilder:
                 next_game_state.pot_commitment[current_player] = max_pot_commitment
             elif a == 2:
                 next_game_state.round_raise_count += 1
+                if next_game_state.current_player == 0:
+                    next_game_state.p1_raise += 1
+                else:
+                    next_game_state.p0_raise += 1
                 # TODO: Update pot change.
                 next_game_state.pot_commitment[current_player] = \
                     max_pot_commitment + self.game.get_raise_size(round_index)

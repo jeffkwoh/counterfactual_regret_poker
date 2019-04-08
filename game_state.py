@@ -89,6 +89,8 @@ class State:
         self.p0_uuid = round_state['seats'][0]['uuid']
         self.p1_uuid = round_state['seats'][1]['uuid']
         self.street = self._round_state['street']
+        self.p0_raises = self._round_state['p0_raises']
+        self.p1_raises = self._round_state['p1_raises']
         self.prev_history = ''
         self.is_cached = is_cached
         self.new_round_state = copy.deepcopy(self._round_state)
