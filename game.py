@@ -72,8 +72,7 @@ class Game:
         Returns:
             int: Number of rounds in the game.
         """
-        # TODO: SHOULD BE 4 for an actual game.
-        return 2
+        return 4
 
     def get_first_player(self, round_index):
         """Returns first layer in given round of the game.
@@ -112,8 +111,7 @@ class Game:
             raise ValueError(
                 'Cannot retrieve max number of raises in round %s in game with %s rounds'
                 % (round_index, self.get_num_rounds()))
-        # TODO: CHANGE TO 4 AFTER BUCKETING.
-        return 1
+        return 4
 
     def get_num_suits(self):
         """Returns number of card suits in the game.
