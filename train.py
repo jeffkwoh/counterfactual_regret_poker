@@ -1,4 +1,5 @@
 import sys
+import resource
 
 # import acpc_python_client as acpc
 from game import Game
@@ -33,11 +34,13 @@ def _action_to_str(action):
 def _get_strategy_lines(lines, node, prefix=''):
     node_type = type(node)
     if node_type == HoleCardsNode or node_type == BoardCardsNode:
+        # Key is an int
+        # TODO: Figure out the right way to encode keys, note, this is dependent on build_tree and affects cfr
         for key, child_node in node.children.items():
             new_prefix = prefix
             if new_prefix and not new_prefix.endswith(':'):
                 new_prefix += ':'
-            new_prefix += ':'.join([str(card) for card in key]) + ':'
+            new_prefix += ':'+ str(key) + ':'
             _get_strategy_lines(lines, child_node, new_prefix)
     elif node_type == ActionNode:
         node_strategy_str = ' '.join([str(prob) for prob in node.average_strategy])
@@ -87,6 +90,12 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage {iterations} {strategy_output_path}")
         sys.exit(1)
+
+    # # Unlocks resource limit for training, to toggle when needed
+    # resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+    # resource.setrlimit(resource.RLIMIT_DATA, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+    # resource.setrlimit(resource.RLIMIT_FSIZE, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+    # resource.setrlimit(resource.RLIMIT_CPU, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
     iterations = int(sys.argv[1])
     output_path = sys.argv[2]
