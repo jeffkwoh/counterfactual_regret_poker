@@ -84,16 +84,13 @@ from pypokerengine.utils.card_utils import (estimate_hole_card_win_rate,
 # TODO: use property getter/setter where applicable
 class State:
 
-    def __init__(self, round_state, hole_card_indices, community_card_indices, is_cached = False, is_terminal = False):
+    def __init__(self, round_state, hole_card_indices, community_card_indices):
         self._round_state = round_state
         self.p0_uuid = round_state['seats'][0]['uuid']
         self.p1_uuid = round_state['seats'][1]['uuid']
         self.street = self._round_state['street']
         self.prev_history = ''
-        self.is_cached = is_cached
         self.new_round_state = copy.deepcopy(self._round_state)
-        self.hole_card_indices = hole_card_indices
-        self.community_card_indices = community_card_indices
         
         self.round_num = {
             'preflop' : 0,
@@ -194,7 +191,6 @@ class State:
         self.current_player = self._round_state['next_player']
         self.p0_stack = self._round_state['seats'][0]['stack']
         self.p1_stack = round_state['seats'][1]['stack']
-        self.is_terminal = is_terminal
 
     def get_num_hole_cards(self) :
         """Returns number of hole cards each player receives at the beginning of the game.
@@ -286,6 +282,16 @@ class State:
         street = self.num_round[round_index]
         street_action_history = action_histories[street]
         return len(street_action_history)
+
+    def get_round_street(self, index) :
+        """
+        Returns the round street based on index value
+        """
+
+        return self.num_round[index]
+
+    def get_round_street_action_histories (self, street) :
+        return self.round_state['action_histories'][street]   
 
     def get_action_histories(self) :
         return self._round_state['action_histories']

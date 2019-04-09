@@ -9,6 +9,7 @@ class CFRAgent(BasePokerPlayer):
 
   def __init__(self) :
     super(CFRAgent, self).__init__()
+    strategy_file_path = "test.txt"
     strategy = {}
     with open(strategy_file_path, 'r') as strategy_file:
         for line in strategy_file:
@@ -20,58 +21,27 @@ class CFRAgent(BasePokerPlayer):
 
   def declare_action(self, valid_actions, hole_card, round_state):
     
-    #TODO need to change the below to hardcoded 52 cards? 
-    #According to test.txt, each card is represented from 0-52?
-    #I am not sure about this
-    suite = {
-        'C': 0,
-        'D': 13,
-        'H': 26,
-        'S': 39}
-    rank = {
-        '2': 0,
-        '3': 1,
-        '4': 2,
-        '5': 3,
-        '6': 4,
-        '7': 5,
-        '8': 6,
-        '9': 7,
-        'T': 8,
-        'J': 9,
-        'Q': 10,
-        'K': 11,
-        'A': 12}
+    hole_card_chars = hole_card
+    community_card_chars = round_state['community_card']
 
-    def convert_card_to_index(card):
-        chars = list(card)
-        return suite[chars[0]] + rank[chars[1]]
-
-    hole_card_indices = []
-    community_card_indices = []
-
-    for card in hole_card:
-        hole_card_indices.append(convert_card_to_index(card))
-    for card in round_state['community_card']:
-        community_card_indices.append(convert_card_to_index(card))
-
-    state = State(round_state, hole_card_indices, community_card_indices)
+    state = State(round_state, hole_card_chars, community_card_chars)
     info_set = ''
-    num_hole_cards = state.get_num_hole_cards()
-    info_set += '%s:' % ':'.join([str(state.get_hole_card(i)) for i in range(num_hole_cards)])
 
-    total_board_cards_count = 0
-    for round_index in range(state.get_round() + 1):
-        new_total_board_cards_count = state.get_total_num_board_cards(round_index)
-        if new_total_board_cards_count > total_board_cards_count:
-            info_set += ':%s:' % ':'.join(
-                [str(state.get_board_card(i))
-                    for i in range(total_board_cards_count, new_total_board_cards_count)])
-            total_board_cards_count = new_total_board_cards_count
+    num_rounds = state.get_round() + 1
 
-        info_set += ''.join(
-            [convert_action_to_str(state.get_action_type(round_index, action_index))
-             for action_index in range(state.get_num_actions(round_index))])
+    for i in range(num_rounds) :
+      bucketNum = bucketing(hole_card_chars, community_card_chars)
+      info_set += bucketNum + ':'
+      street = state.get_round_street()
+      action_histories_street = state.get_round_street_action_histories(street)
+      for history in action_histories_street :
+          action = history['action']
+          if action == 'RAISE' :
+             info_set += 'r'
+          elif action == 'CALL' :
+            info_set += 'c'
+      if i != num_rounds - 1 :
+        info_set += '::'
     
     node_strategy = self.strategy[info_set]
     
