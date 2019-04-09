@@ -1,16 +1,13 @@
 import operator
-import random
 import copy
 from functools import reduce
 import math
 
-# import acpc_python_client as acpc
 
 from build_tree import GameTreeBuilder
 from constants import NUM_ACTIONS
 from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from hand_evaluation import get_winners
-from utils import build_standard_deck
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
 
 try:
@@ -20,25 +17,13 @@ except ImportError:
 
 
 class Cfr:
-    """Creates new ACPC poker using CFR algorithm which runs for specified number of iterations.
-
-    !!! Currently only limit betting games and games with up to 5 cards total are supported !!!
-    """
 
     def __init__(self, game):
         """Build new CFR instance.
-
         Args:
-            game (Game): ACPC game definition object.
+            game (Game): game definition object.
         """
         self.game = game
-
-        # if game.get_betting_type() != acpc.BettingType.LIMIT:
-        #     raise AttributeError('No-limit betting games not supported')
-        #
-        # total_cards_count = game.get_num_hole_cards() + game.get_total_num_board_cards(game.get_num_rounds() - 1)
-        # if total_cards_count > 5:
-        #     raise AttributeError('Only games with up to 5 cards are supported')
 
         game_tree_builder = GameTreeBuilder(game)
 
@@ -145,9 +130,6 @@ class Cfr:
         flattened_board_cards = reduce(
             lambda res, cards: res + list(cards), board_cards, [])
 
-        # player_cards = [(list(hole_cards[p]) + flattened_board_cards) if not players_folded[p] else None
-        #                 for p in range(player_count)]
-
         winners = get_winners(hole_cards, players_folded, flattened_board_cards)
         winner_count = len(winners)
         value_per_winner = sum(pot_commitment) / winner_count
@@ -164,8 +146,6 @@ class Cfr:
                 deck.draw_cards(num_hole_cards))  # Draw_cards is a mutating function with side effects
 
         # TODO: The key for next nodes need to correspond to the new key for the buckets.
-        # next_hole_cards[]
-        # next_nodes = [node.children[]]
         # TODO: Why do we key into the opponent's nodes as well?
         next_nodes = [node.children[self._get_bucket_key(hole_cards=next_hole_cards[p])]
                       for p, node in enumerate(nodes)]
