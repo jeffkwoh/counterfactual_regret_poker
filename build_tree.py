@@ -1,5 +1,4 @@
 import copy
-import itertools
 
 from game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
 
@@ -9,8 +8,6 @@ _BUCKET_NUM = 5
 
 
 class GameTreeBuilder:
-    """Builds game tree from given ACPC game definition object."""
-
     class GameState:
         """State of the game passed down through the recursive tree builder."""
 
@@ -44,65 +41,14 @@ class GameTreeBuilder:
     def __init__(self, game):
         self.game = game
 
-    # TODO: Use python list literals for speed.
-    def _build_standard_deck(self):
-        deck = []
-        for suit in range(4):
-            for rank in range(13):
-                deck.append(rank * _MAX_SUITS + suit)
-        return deck
-
-    def card_rank(self, card):
-        """Returns card rank from card's int representation.
-
-        Args:
-            card (int): Int representation of the card. This representation
-                        has each card rank of each suit represented by unique integer.
-
-        Returns:
-            int: Card rank as 0 based index.
-        """
-        return card // _MAX_SUITS
-
-    def card_suit(self, card):
-        """Returns card suit from card's int representation.
-
-        Args:
-            card (int): Int representation of the card. This representation
-                        has each card rank of each suit represented by unique integer.
-
-        Returns:
-            int: Card suit as 0 based index.
-        """
-        return card % _MAX_SUITS
-
     def build_tree(self):
         """Builds and returns the game tree."""
 
-        deck = self._build_standard_deck()
-
         # First generate hole cards node which is only generated once at the beginning of the game
         root = HoleCardsNode(None, self.game.get_num_hole_cards())
-        num_hole_cards = self.game.get_num_hole_cards()
-        # combinations(iterable, length of tuple)
         bucket_numbers = range(_BUCKET_NUM)
-        # TODO: Replace with bucketing.
-        # for hole_cards_indexes in hole_card_combinations:
-        #     """
-        #     Needs to be sorted otherwise we'll run into key errors.
-        #     Hole_cards is used as a key, and tuples are ordered.
-        #     """
-        #     hole_cards = tuple(sorted(map(lambda i: deck[i], hole_cards_indexes)))
-        #     next_deck = self.remove_hole_cards(deck, hole_cards_indexes)
-        #
-        #     game_state = GameTreeBuilder.GameState(self.game, next_deck)
-        #     # Start first game round with board cards node
-        #     # Tuple of hole_cards are used as child keys if this is preflop.
-        #     self._generate_board_cards_node(root, hole_cards, game_state)
         for bucket in bucket_numbers:
             game_state = GameTreeBuilder.GameState(self.game, [bucket])
-            #     # Start first game round with board cards node
-            #     # Tuple of hole_cards are used as child keys if this is preflop.
             self._generate_board_cards_node(root, bucket, game_state)
 
         return root
@@ -124,7 +70,6 @@ class GameTreeBuilder:
             new_node = BoardCardsNode(parent, num_board_cards)
             parent.children[child_key] = new_node
 
-            # TODO: Replace with bucketing.
             bucket_numbers = range(_BUCKET_NUM)
             for bucket in bucket_numbers:
                 next_game_state = copy.deepcopy(game_state)
