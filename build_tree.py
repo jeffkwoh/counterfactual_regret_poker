@@ -1,10 +1,9 @@
 import copy
 
 from game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
+from constants import _BUCKET_NUM
 
 # TODO: Remove dirty global Var
-_MAX_SUITS = 4
-_BUCKET_NUM = 5
 
 
 class GameTreeBuilder:
