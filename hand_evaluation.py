@@ -76,11 +76,9 @@ def partition_cards(cards):
     return [hole_cards, community_cards]
 
 
-def get_winners(hands):
+def get_winners(players_hole, players_folded, community_cards):
     """Evaluate hands of players and determine winners.
-
-    !!! This function is currently only capable of evaluating hands that contain up to 5 cards. !!!
-
+    #TODO: fix docs
     Args:
         hands (list(list(int))): List which contains player's hands. Each player's hand is a list of integers
                                  that represent player's cards. Board cards must be included in each player's hand.
@@ -88,14 +86,15 @@ def get_winners(hands):
     Returns:
         list(int): Indexes of winners. The pot should be split evenly between all winners.
     """
-
-    card_hands = [[cfr_card_to_pypoker_card(card) for card in hand] for hand in hands]
-    pokerengine_card_hands = [partition_cards(card_hand) for card_hand in card_hands]
-    bitscores = [HandEvaluator.eval_hand(partitioned_hand[0], partitioned_hand[1]) for partitioned_hand in
-                 pokerengine_card_hands]
-    best_score = max(bitscores)
-    winner_indexes = [i for i, bitscore in enumerate(bitscores) if bitscore >= best_score]
-    return winner_indexes
+    valid_scores = []
+    for i, hole in enumerate(players_hole):
+        if players_folded[i]:
+            valid_scores.append(0)
+        else:
+            valid_scores.append(HandEvaluator.eval_hand(hole, community_cards))
+    best_score = max(valid_scores)
+    winners = [i for i, score in enumerate(valid_scores) if score >= best_score]
+    return winners
 
 # def _parse_hand(hand):
 #     return map(lambda card: (acpc.game_utils.card_rank(card), acpc.game_utils.card_suit(card)), hand)

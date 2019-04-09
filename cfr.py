@@ -1,6 +1,8 @@
 import operator
 import random
+import copy
 from functools import reduce
+import math
 
 # import acpc_python_client as acpc
 
@@ -9,6 +11,7 @@ from constants import NUM_ACTIONS
 from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from hand_evaluation import get_winners
 from utils import build_standard_deck
+from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
 
 try:
     from tqdm import tqdm
@@ -97,10 +100,9 @@ class Cfr:
             except NameError:
                 iterations_iterable = range(iterations)
 
-        deck = build_standard_deck()
         for i in iterations_iterable:
-            current_deck = list(deck)
-            random.shuffle(current_deck)
+            current_deck = gen_deck()
+            current_deck.shuffle()
 
             self._cfr(
                 [self.game_tree] * self.player_count,
@@ -142,9 +144,11 @@ class Cfr:
 
         flattened_board_cards = reduce(
             lambda res, cards: res + list(cards), board_cards, [])
-        player_cards = [(list(hole_cards[p]) + flattened_board_cards) if not players_folded[p] else None
-                        for p in range(player_count)]
-        winners = get_winners(player_cards)
+
+        # player_cards = [(list(hole_cards[p]) + flattened_board_cards) if not players_folded[p] else None
+        #                 for p in range(player_count)]
+
+        winners = get_winners(hole_cards, players_folded, flattened_board_cards)
         winner_count = len(winners)
         value_per_winner = sum(pot_commitment) / winner_count
         return [value_per_winner - pot_commitment[p] if p in winners else -pot_commitment[p]
@@ -153,22 +157,41 @@ class Cfr:
     def _cfr_hole_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         num_hole_cards = nodes[0].card_count
         next_hole_cards = []
-        next_deck = list(deck)
-        for p in range(self.player_count):
-            next_hole_cards.append(tuple(sorted(next_deck[:num_hole_cards])))
-            next_deck = next_deck[num_hole_cards:]
+        next_deck = copy.deepcopy(deck)
 
-        next_nodes = [node.children[next_hole_cards[p]]
+        for p in range(self.player_count):
+            next_hole_cards.append(
+                deck.draw_cards(num_hole_cards))  # Draw_cards is a mutating function with side effects
+
+        # TODO: The key for next nodes need to correspond to the new key for the buckets.
+        # next_hole_cards[]
+        # next_nodes = [node.children[]]
+        # TODO: Why do we key into the opponent's nodes as well?
+        next_nodes = [node.children[self._get_bucket_key(hole_cards=next_hole_cards[p])]
                       for p, node in enumerate(nodes)]
-        return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, next_deck, players_folded)
+
+        # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
+        return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, copy.deepcopy(next_deck),
+                         players_folded)
+
+    def _get_bucket_key(self, hole_cards, community_cards=[]):
+        # TODO: HARD CODED CONSTANT
+        NUM_BUCKET = 5
+        probability_of_winning = estimate_hole_card_win_rate(50, 2, hole_cards, community_cards)
+        partition = int(math.floor(probability_of_winning * NUM_BUCKET))
+        return partition if partition != NUM_BUCKET else NUM_BUCKET - 1
 
     def _cfr_board_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         num_board_cards = nodes[0].card_count
-        selected_board_cards = tuple(sorted(deck[:num_board_cards]))
-        next_nodes = [node.children[selected_board_cards]
-                      for p, node in enumerate(nodes)]
+        selected_board_cards = deck.draw_cards(num_board_cards)
+        # TODO: Check if the hole_cards here belong to the player , need tracing through the code. check hole_cards[0]
+        next_nodes = [
+            node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=selected_board_cards)]
+            for p, node in enumerate(nodes)]
+
+        # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
         return self._cfr(next_nodes, reach_probs,
-                         hole_cards, board_cards + [selected_board_cards], deck[num_board_cards:],
+                         hole_cards, board_cards + [selected_board_cards], copy.deepcopy(deck),
                          players_folded)
 
     # TODO: Understand calculation of updated strategy probabilities.
@@ -207,7 +230,7 @@ class Cfr:
                 next_players_folded[node_player] = True
             else:
                 next_players_folded = players_folded
-
+            # Recursively calculates cfr
             action_util = self._cfr(
                 [node.children[a] for node in nodes],
                 next_reach_probs,
