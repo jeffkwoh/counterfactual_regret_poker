@@ -30,7 +30,7 @@ class CFRAgent(BasePokerPlayer):
     num_rounds = state.get_round() + 1
 
     for i in range(num_rounds) :
-      bucketNum = bucketing(hole_card_chars, community_card_chars)
+      bucketNum = get_bucket_number(hole_card_chars, community_card_chars)
       info_set += bucketNum + ':'
       street = state.get_round_street()
       action_histories_street = state.get_round_street_action_histories(street)
