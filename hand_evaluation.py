@@ -1,4 +1,10 @@
 from pypokerengine.engine.hand_evaluator import HandEvaluator
+from pypokerengine.engine.card import Card
+from deuces.evaluator import Evaluator
+from deuces.card import Card as DeucesCard
+import constants
+import sys
+import math
 
 
 def get_winners(players_hole, players_folded, community_cards):
@@ -18,3 +24,120 @@ def get_winners(players_hole, players_folded, community_cards):
     best_score = max(valid_scores)
     winners = [i for i, score in enumerate(valid_scores) if score >= best_score]
     return winners
+
+def get_bucket_number(hole_cards, community_cards = None):
+	"""
+  	:param hole_cards: List(Card) hole cards belong to the current player
+    :param community_cards: List(Card) community cards
+    
+    Evaluate handstrength using Chen's Formula if only hole cards are drawn.
+    Otherwise, evaluate handstrength using Deuces Monte-carlo Look-up table.
+    Divide the bucket with equal probability based on the number of buckets.
+    Using the handstrength value drawn earlier, find the right bucket.
+    """
+	if not community_cards:
+		points = chens_hand_evaluator(hole_cards)
+		bucket_number = int(math.ceil((points + 2) / 22.0 * constants._BUCKET_NUM)) - 1
+	else:
+		evaluator = Evaluator()
+
+		new_hole_cards = []
+		for h in hole_cards:
+			chars = list(h)
+			new_h = DeucesCard.new(chars[1] + chars[0].lower())
+			new_hole_cards.append(new_h)
+
+		new_community_cards = []
+		for c in community_cards:
+			chars = list(c)
+			new_c = DeucesCard.new(chars[1] + chars[0].lower())
+			new_community_cards.append(new_c)
+	
+		ranking_among_all_five_cards = evaluator.evaluate(new_community_cards, new_hole_cards)
+	
+		strength = 1.0 - evaluator.get_five_card_rank_percentage(ranking_among_all_five_cards)
+		bucket_number = int(math.ceil(strength * constants._BUCKET_NUM)) - 1
+  
+	return bucket_number
+
+def chens_hand_evaluator(hole_cards):
+    
+	#CHEN_MAX = 20.0
+	#CHEN_MIN = -1.5
+ 
+	SUITE_MAP_TO_INT = {
+		"C" : 0,
+		"D" : 13,
+  		"H" : 26,
+		"S" : 39
+	}
+ 
+ 	RANK_MAP_TO_INT = {
+		"A" : 1,
+		"2" : 2,
+  		"3" : 3,
+  		"4" : 4,
+  		"5" : 5,
+  		"6" : 6,
+  		"7" : 7,
+  		"8" : 8,
+  		"9" : 9,
+  		"T" : 10,
+  		"J" : 11,
+  		"Q" : 12,
+  		"K" : 13
+	}
+  
+	hole_card_indices = []
+	for h in hole_cards:
+		chars = list(h)
+		index = SUITE_MAP_TO_INT[chars[0]] + RANK_MAP_TO_INT[chars[1]]
+		hole_card_indices.append(index)
+ 
+	c1 = Card.from_id(hole_card_indices[0])
+	c2 = Card.from_id(hole_card_indices[1])
+	maxRank = max(c1.rank, c2.rank)
+	strength = 0
+	
+	# High card
+	if maxRank == 14: #Ace
+		strength += 10
+	elif maxRank == 13: #King
+		strength += 8
+	elif maxRank == 12: #Queen
+		strength += 7
+	elif maxRank == 11: #Jack
+		strength += 6
+	else:
+		strength += maxRank / 2.0
+	
+	# Pairs
+	if c1.rank == c2.rank:
+		minimum = 5
+		if c1.rank == 5: #Five
+			minimum = 6
+		strength = max(strength * 2, minimum);
+	
+	# Suited
+	if c1.suit == c2.suit:
+		strength += 2
+
+	# Closeness
+	gap = maxRank - min(c1.rank, c2.rank) - 1
+	if gap == 0:
+		strength += 1
+	elif gap == 1:
+		strength -= 1
+	elif gap == 2:
+		strength -= 2
+	elif gap == 3:
+		strength -= 4
+	elif gap != -1:
+		strength -= 5
+	
+	if gap == 1 and maxRank < 2:
+		strength += 1
+
+	return strength
+
+	
