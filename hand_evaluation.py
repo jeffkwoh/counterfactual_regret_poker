@@ -1,18 +1,17 @@
 from pypokerengine.engine.hand_evaluator import HandEvaluator
-from pypokerengine.engine.card import Card
+from pypokerengine.engine.card import Card as PyCard
 from deuces.evaluator import Evaluator
 from deuces.card import Card as DeucesCard
 import constants
-import sys
 import math
 
 
 def get_winners(players_hole, players_folded, community_cards):
     """
     Evaluate which players win the game, GIVEN complete information.
-    :param players_hole: List(List(Card)) each player's hole IN ORDER of their index
+    :param players_hole: List(List(PyCard)) each player's hole IN ORDER of their index
     :param players_folded: List(bool) each player's status of folding (True for yes) IN ORDER of their index
-    :param community_cards: List(Card) community cards
+    :param community_cards: List(PyCard) community cards
     :return: List(int) Representing indexes of winners, pot is evenly divided among winners.
     """
     valid_scores = []
@@ -26,45 +25,49 @@ def get_winners(players_hole, players_folded, community_cards):
     return winners
 
 def get_bucket_number(hole_cards, community_cards = None):
-	"""
-  	:param hole_cards: List(Card) hole cards belong to the current player
-    :param community_cards: List(Card) community cards
-    
-    Evaluate handstrength using Chen's Formula if only hole cards are drawn.
+	"""	
+	Evaluate handstrength base on Chen's Formula if only hole cards are drawn,
+    because it values both hand potential as well as relative value of card rank.
     Otherwise, evaluate handstrength using Deuces Monte-carlo Look-up table.
     Divide the bucket with equal probability based on the number of buckets.
     Using the handstrength value drawn earlier, find the right bucket.
+    
+    :param hole_cards: List(PyCard) hole cards belong to the current player
+    :param community_cards: List(PyCard) community cards   
     """
 	if not community_cards:
-		points = chens_hand_evaluator(hole_cards)
-		bucket_number = int(math.ceil((points + 2) / 22.0 * constants._BUCKET_NUM)) - 1
+		points = starting_hand_evaluator(hole_cards)
+		bucket_number = int(math.ceil((points + 1.5) / 21.5 * constants._BUCKET_NUM) - 1)
+  		bucket_number = 0 if bucket_number == -1 else bucket_number
 	else:
-		evaluator = Evaluator()
 
 		new_hole_cards = []
 		for h in hole_cards:
-			chars = list(h)
-			new_h = DeucesCard.new(chars[1] + chars[0].lower())
+			new_h = DeucesCard.new(h[1] + h[0].lower())
 			new_hole_cards.append(new_h)
 
 		new_community_cards = []
 		for c in community_cards:
-			chars = list(c)
-			new_c = DeucesCard.new(chars[1] + chars[0].lower())
+			new_c = DeucesCard.new(c[1] + c[0].lower())
 			new_community_cards.append(new_c)
-	
-		ranking_among_all_five_cards = evaluator.evaluate(new_community_cards, new_hole_cards)
-	
-		strength = 1.0 - evaluator.get_five_card_rank_percentage(ranking_among_all_five_cards)
-		bucket_number = int(math.ceil(strength * constants._BUCKET_NUM)) - 1
+   
+		evaluator = Evaluator()
+		five_cards_ranking = evaluator.evaluate(new_community_cards, new_hole_cards)
+		strength = 1.0 - evaluator.get_five_card_rank_percentage(five_cards_ranking)
+		bucket_number = int(math.ceil(strength * constants._BUCKET_NUM) - 1)
+  		bucket_number = 0 if bucket_number == -1 else bucket_number
   
 	return bucket_number
 
-def chens_hand_evaluator(hole_cards):
-    
-	#CHEN_MAX = 20.0
-	#CHEN_MIN = -1.5
- 
+def starting_hand_evaluator(hole_cards):
+
+	"""
+  	This takes into the account the card potential apart from relative card values.
+   
+   	:param hole_cards: List(str) hole cards belong to the current player
+   	:retrun: int within a range of -1.5 and 20   
+    """
+	
 	SUITE_MAP_TO_INT = {
 		"C" : 0,
 		"D" : 13,
@@ -90,12 +93,11 @@ def chens_hand_evaluator(hole_cards):
   
 	hole_card_indices = []
 	for h in hole_cards:
-		chars = list(h)
-		index = SUITE_MAP_TO_INT[chars[0]] + RANK_MAP_TO_INT[chars[1]]
+		index = SUITE_MAP_TO_INT[h[0]] + RANK_MAP_TO_INT[h[1]]
 		hole_card_indices.append(index)
  
-	c1 = Card.from_id(hole_card_indices[0])
-	c2 = Card.from_id(hole_card_indices[1])
+	c1 = PyCard.from_id(hole_card_indices[0])
+	c2 = PyCard.from_id(hole_card_indices[1])
 	maxRank = max(c1.rank, c2.rank)
 	strength = 0
 	
@@ -123,21 +125,21 @@ def chens_hand_evaluator(hole_cards):
 		strength += 2
 
 	# Closeness
-	gap = maxRank - min(c1.rank, c2.rank) - 1
-	if gap == 0:
+	gap = int(math.fabs(c1.rank - c2.rank))
+	if gap == 1:
 		strength += 1
-	elif gap == 1:
-		strength -= 1
 	elif gap == 2:
-		strength -= 2
+		strength -= 1
 	elif gap == 3:
+		strength -= 2
+	elif gap == 4:
 		strength -= 4
-	elif gap != -1:
-		strength -= 5
+	else:
+		if gap != 0:
+			strength -= 5
 	
-	if gap == 1 and maxRank < 2:
+ 	# Bonus for consecutive and Smaller than Queen
+	if gap == 1 and maxRank < 12:
 		strength += 1
 
 	return strength
-
-	
