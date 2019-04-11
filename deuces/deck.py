@@ -1,5 +1,5 @@
 from random import shuffle
-from card import Card
+from deuces.card import Card
 
 class Deck:
     """

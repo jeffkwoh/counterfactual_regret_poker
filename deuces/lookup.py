@@ -1,5 +1,5 @@
 import itertools
-from card import Card
+from deuces.card import Card
 
 class LookupTable(object):
     """

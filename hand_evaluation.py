@@ -32,15 +32,13 @@ def get_bucket_number(hole_cards, community_cards = None):
     Divide the bucket with equal probability based on the number of buckets.
     Using the handstrength value drawn earlier, find the right bucket.
     
-    :param hole_cards: List(PyCard) hole cards belong to the current player
-    :param community_cards: List(PyCard) community cards   
+    :param hole_cards: List(str) in format of 'CA' for hole cards belong to the current player
+    :param community_cards: List(str) in format of 'S3' for community cards   
     """
 	if not community_cards:
 		points = starting_hand_evaluator(hole_cards)
 		bucket_number = int(math.ceil((points + 1.5) / 21.5 * constants._BUCKET_NUM) - 1)
-  		bucket_number = 0 if bucket_number == -1 else bucket_number
 	else:
-
 		new_hole_cards = []
 		for h in hole_cards:
 			new_h = DeucesCard.new(h[1] + h[0].lower())
@@ -55,8 +53,9 @@ def get_bucket_number(hole_cards, community_cards = None):
 		five_cards_ranking = evaluator.evaluate(new_community_cards, new_hole_cards)
 		strength = 1.0 - evaluator.get_five_card_rank_percentage(five_cards_ranking)
 		bucket_number = int(math.ceil(strength * constants._BUCKET_NUM) - 1)
-  		bucket_number = 0 if bucket_number == -1 else bucket_number
   
+	bucket_number = 0 if bucket_number == -1 else bucket_number
+ 
 	return bucket_number
 
 def starting_hand_evaluator(hole_cards):
@@ -64,7 +63,7 @@ def starting_hand_evaluator(hole_cards):
 	"""
   	This takes into the account the card potential apart from relative card values.
    
-   	:param hole_cards: List(str) hole cards belong to the current player
+   	:param hole_cards: List(str) in format of 'CA' for hole cards belong to the current player
    	:retrun: int within a range of -1.5 and 20   
     """
 	
@@ -74,8 +73,8 @@ def starting_hand_evaluator(hole_cards):
   		"H" : 26,
 		"S" : 39
 	}
- 
- 	RANK_MAP_TO_INT = {
+
+	RANK_MAP_TO_INT = {
 		"A" : 1,
 		"2" : 2,
   		"3" : 3,
