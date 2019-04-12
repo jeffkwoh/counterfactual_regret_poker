@@ -1,6 +1,5 @@
 import copy
 import pprint
-from enum import Enum, unique
 
 from pypokerengine.utils.card_utils import (estimate_hole_card_win_rate,
                                             gen_cards)
@@ -187,7 +186,7 @@ class State:
                     self.new_round_state['current_street_raises'] = {street : 0}
   
 
-        self.prev_history = self._round_state['prev_history']
+        self.prev_history = self.new_round_state['prev_history']
         self.current_player = self._round_state['next_player']
         self.p0_stack = self._round_state['seats'][0]['stack']
         self.p1_stack = round_state['seats'][1]['stack']
@@ -291,7 +290,7 @@ class State:
         return self.num_round[index]
 
     def get_round_street_action_histories (self, street) :
-        return self.round_state['action_histories'][street]   
+        return self._round_state['action_histories'][street]   
 
     def get_action_histories(self) :
         return self._round_state['action_histories']

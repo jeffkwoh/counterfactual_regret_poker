@@ -9,6 +9,7 @@ from constants import NUM_ACTIONS
 from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from hand_evaluation import get_winners
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
+import hand_evaluation as HSEval
 
 try:
     from tqdm import tqdm
@@ -155,11 +156,11 @@ class Cfr:
                          players_folded)
 
     def _get_bucket_key(self, hole_cards, community_cards=[]):
-        # TODO: HARD CODED CONSTANT
-        NUM_BUCKET = 5
-        probability_of_winning = estimate_hole_card_win_rate(50, 2, hole_cards, community_cards)
-        partition = int(math.floor(probability_of_winning * NUM_BUCKET))
-        return partition if partition != NUM_BUCKET else NUM_BUCKET - 1
+        if not community_cards:
+            return HSEval.get_bucket_number(map(lambda x: x.__str__(), hole_cards))
+        else:
+            return HSEval.get_bucket_number(map(lambda x: x.__str__(), hole_cards),
+                                            map(lambda x: x.__str__(), community_cards))
 
     def _cfr_board_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         num_board_cards = nodes[0].card_count

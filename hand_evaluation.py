@@ -1,12 +1,17 @@
 from pypokerengine.engine.hand_evaluator import HandEvaluator
+from pypokerengine.engine.card import Card as PyCard
+from deuces.evaluator import Evaluator
+from deuces.card import Card as DeucesCard
+import constants
+import math
 
 
 def get_winners(players_hole, players_folded, community_cards):
     """
     Evaluate which players win the game, GIVEN complete information.
-    :param players_hole: List(List(Card)) each player's hole IN ORDER of their index
+    :param players_hole: List(List(PyCard)) each player's hole IN ORDER of their index
     :param players_folded: List(bool) each player's status of folding (True for yes) IN ORDER of their index
-    :param community_cards: List(Card) community cards
+    :param community_cards: List(PyCard) community cards
     :return: List(int) Representing indexes of winners, pot is evenly divided among winners.
     """
     valid_scores = []

@@ -4,6 +4,9 @@ import random as rand
 import pprint
 import random
 import sys
+from hand_evaluation import get_bucket_number
+import json
+
 
 from game_state import State
 class CFRAgent(BasePokerPlayer):
@@ -19,6 +22,8 @@ class CFRAgent(BasePokerPlayer):
             line_split = line.split(' ')
             strategy[line_split[0]] = [float(probStr) for probStr in line_split[1:4]]
     self.strategy = strategy
+    # with open('file.txt', 'w') as file:
+    #   file.write(json.dumps(self.strategy))
 
   def declare_action(self, valid_actions, hole_card, round_state):
     
@@ -26,14 +31,14 @@ class CFRAgent(BasePokerPlayer):
     community_card_chars = round_state['community_card']
 
     state = State(round_state, hole_card_chars, community_card_chars)
-    info_set = ''
+    info_set = ':'
 
     num_rounds = state.get_round() + 1
 
     for i in range(num_rounds) :
       bucketNum = get_bucket_number(hole_card_chars, community_card_chars)
-      info_set += bucketNum + ':'
-      street = state.get_round_street()
+      info_set += str(bucketNum) + ':'
+      street = state.get_round_street(i)
       action_histories_street = state.get_round_street_action_histories(street)
       for history in action_histories_street :
           action = history['action']
@@ -48,15 +53,16 @@ class CFRAgent(BasePokerPlayer):
     
     choice = random.random()
     probability_sum = 0
-    for i in range(3):
+    numActions = len(valid_actions)
+    for i in range(numActions):
         action_probability = node_strategy[i]
         if action_probability == 0:
             continue
         probability_sum += action_probability
         if choice < probability_sum:
-            return valid_actions[i]
+            return valid_actions[i]['action']
     # Return the last action since it could have not been selected due to floating point error
-    return valid_actions[2]
+    return valid_actions[numActions-1]['action']
 
 
 
@@ -69,7 +75,7 @@ class CFRAgent(BasePokerPlayer):
   def receive_round_start_message(self, round_count, hole_card, seats):
     # print("My ID : "+self.uuid+", round count : "+str(round_count)+", hole card : "+str(hole_card))
     # pprint.pprint(seats)
-    print("-------------------------------")
+    # print("-------------------------------")
     pass
 
   def receive_street_start_message(self, street, round_state):
@@ -79,13 +85,6 @@ class CFRAgent(BasePokerPlayer):
     pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
-    # print("My ID (round result) : "+self.uuid)
-    # pprint.pprint(round_state)
-    # print("\n\n")
-    # self.round_count = self.round_count + 1
-    print("CFRAgent Player")
-    pprint.pprint(hand_info)
-    print('\n')
     pass
 
 def setup_ai():
