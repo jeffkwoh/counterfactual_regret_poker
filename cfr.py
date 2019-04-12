@@ -157,10 +157,10 @@ class Cfr:
 
     def _get_bucket_key(self, hole_cards, community_cards=[]):
         if not community_cards:
-            return HSEval.get_bucket_number(map(lambda x: x.__str__(), hole_cards))
+            return HSEval.get_bucket_number(list(map(lambda x: x.__str__(), hole_cards)))
         else:
-            return HSEval.get_bucket_number(map(lambda x: x.__str__(), hole_cards),
-                                            map(lambda x: x.__str__(), community_cards))
+            return HSEval.get_bucket_number(list(map(lambda x: x.__str__(), hole_cards)),
+                                            list(map(lambda x: x.__str__(), community_cards)))
 
     def _cfr_board_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         num_board_cards = nodes[0].card_count
