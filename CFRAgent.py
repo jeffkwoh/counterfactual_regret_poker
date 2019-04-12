@@ -1,4 +1,5 @@
 from pypokerengine.players import BasePokerPlayer
+import hand_evaluation
 import random as rand
 import pprint
 import random
