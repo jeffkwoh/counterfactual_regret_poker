@@ -22,8 +22,6 @@ class CFRAgent(BasePokerPlayer):
             line_split = line.split(' ')
             strategy[line_split[0]] = [float(probStr) for probStr in line_split[1:4]]
     self.strategy = strategy
-    # with open('file.txt', 'w') as file:
-    #   file.write(json.dumps(self.strategy))
 
   def declare_action(self, valid_actions, hole_card, round_state):
     
@@ -36,8 +34,8 @@ class CFRAgent(BasePokerPlayer):
     num_rounds = state.get_round() + 1
 
     for i in range(num_rounds) :
-      bucketNum = get_bucket_number(hole_card_chars, community_card_chars)
-      info_set += str(bucketNum) + ':'
+      bucket_number = get_bucket_number(hole_card_chars, community_card_chars)
+      info_set += str(bucket_number) + ':'
       street = state.get_round_street(i)
       action_histories_street = state.get_round_street_action_histories(street)
       for history in action_histories_street :
@@ -53,8 +51,8 @@ class CFRAgent(BasePokerPlayer):
     
     choice = random.random()
     probability_sum = 0
-    numActions = len(valid_actions)
-    for i in range(numActions):
+    num_actions = len(valid_actions)
+    for i in range(num_actions):
         action_probability = node_strategy[i]
         if action_probability == 0:
             continue
@@ -62,20 +60,14 @@ class CFRAgent(BasePokerPlayer):
         if choice < probability_sum:
             return valid_actions[i]['action']
     # Return the last action since it could have not been selected due to floating point error
-    return valid_actions[numActions-1]['action']
+    return valid_actions[num_actions-1]['action']
 
 
 
   def receive_game_start_message(self, game_info):
-    # print("\n\n")
-    # pprint.pprint(game_info)
-    # print("---------------------------------------------------------------------")
     pass
 
   def receive_round_start_message(self, round_count, hole_card, seats):
-    # print("My ID : "+self.uuid+", round count : "+str(round_count)+", hole card : "+str(hole_card))
-    # pprint.pprint(seats)
-    # print("-------------------------------")
     pass
 
   def receive_street_start_message(self, street, round_state):

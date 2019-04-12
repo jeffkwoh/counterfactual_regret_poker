@@ -30,9 +30,6 @@ class RaisedPlayer(BasePokerPlayer):
     pass
 
   def receive_street_start_message(self, street, round_state):
-    # print("Street %s Started"%street)
-    # print("-------------------------------")
-    # print('\n')
     pass
 
   def receive_game_update_message(self, action, round_state):
