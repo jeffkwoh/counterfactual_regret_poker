@@ -45,8 +45,7 @@ class GameTreeBuilder:
 
         # First generate hole cards node which is only generated once at the beginning of the game
         root = HoleCardsNode(None, self.game.get_num_hole_cards())
-        bucket_numbers = range(_BUCKET_NUM)
-        for bucket in bucket_numbers:
+        for bucket in range(_BUCKET_NUM):
             game_state = GameTreeBuilder.GameState(self.game, [bucket])
             self._generate_board_cards_node(root, bucket, game_state)
 
