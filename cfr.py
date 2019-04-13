@@ -140,7 +140,6 @@ class Cfr:
     def _cfr_hole_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         num_hole_cards = nodes[0].card_count
         next_hole_cards = []
-        next_deck = copy.deepcopy(deck)
 
         for p in range(self.player_count):
             next_hole_cards.append(deck.draw_cards(num_hole_cards)) # Draw_cards is a mutating function with side effects
@@ -151,7 +150,7 @@ class Cfr:
                       for p, node in enumerate(nodes)]
 
         # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
-        return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, copy.deepcopy(next_deck),
+        return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, copy.deepcopy(deck),
                          players_folded)
 
     def _get_bucket_key(self, hole_cards, community_cards=[]):
@@ -162,6 +161,7 @@ class Cfr:
                                             list(map(lambda x: x.__str__(), community_cards)))
 
     def _cfr_board_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
+        deck = copy.deepcopy(deck)
         num_board_cards = nodes[0].card_count
         selected_board_cards = deck.draw_cards(num_board_cards)
         all_board_cards = board_cards + selected_board_cards
@@ -169,12 +169,12 @@ class Cfr:
                 
         # TODO: Check if the hole_cards here belong to the player , need tracing through the code. check hole_cards[0]
         next_nodes = [
-            node.children[self._get_bucket_key(hole_cards=hole_cards[p], community_cards=all_board_cards)]
+            node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=all_board_cards)]
             for p, node in enumerate(nodes)]
 
         # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
         return self._cfr(next_nodes, reach_probs, hole_cards, unflattened_board_cards,
-                        copy.deepcopy(deck), players_folded)
+                        deck, players_folded)
 
     # TODO: Understand calculation of updated strategy probabilities.
     @staticmethod
@@ -219,7 +219,7 @@ class Cfr:
             util[a] = action_util
             for player in range(self.player_count):
                 node_util[player] += strategy[a] * action_util[player]
-
+            
         for a in node.children:
             # Calculate regret and add it to regret sums
             regret = util[a][node_player] - node_util[node_player]
