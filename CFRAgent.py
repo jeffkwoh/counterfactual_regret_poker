@@ -13,7 +13,7 @@ class CFRAgent(BasePokerPlayer):
 
   def __init__(self) :
     super(CFRAgent, self).__init__()
-    strategy_file_path = "test.txt"
+    strategy_file_path = "strategy.txt"
     strategy = {}
     with open(strategy_file_path, 'r') as strategy_file:
         for line in strategy_file:
