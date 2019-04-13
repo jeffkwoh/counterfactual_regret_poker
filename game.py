@@ -72,7 +72,7 @@ class Game:
         Returns:
             int: Number of rounds in the game.
         """
-        return 3
+        return 4
 
     def get_first_player(self, round_index):
         """Returns first layer in given round of the game.
