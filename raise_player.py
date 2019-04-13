@@ -30,20 +30,13 @@ class RaisedPlayer(BasePokerPlayer):
     pass
 
   def receive_street_start_message(self, street, round_state):
-    # print("Street %s Started"%street)
-    # print("-------------------------------")
-    # print('\n')
     pass
 
   def receive_game_update_message(self, action, round_state):
     pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
-    pprint.pprint(round_state)
-    # while True:
-    #   pass
-    print("---------------")
-    #pass
+    pass
 
 def setup_ai():
   return RandomPlayer()

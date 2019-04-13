@@ -9,6 +9,7 @@ from constants import NUM_ACTIONS
 from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from hand_evaluation import get_winners
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
+import hand_evaluation as HSEval
 
 try:
     from tqdm import tqdm
@@ -139,11 +140,9 @@ class Cfr:
     def _cfr_hole_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         num_hole_cards = nodes[0].card_count
         next_hole_cards = []
-        next_deck = copy.deepcopy(deck)
 
         for p in range(self.player_count):
-            next_hole_cards.append(
-                deck.draw_cards(num_hole_cards))  # Draw_cards is a mutating function with side effects
+            next_hole_cards.append(deck.draw_cards(num_hole_cards)) # Draw_cards is a mutating function with side effects
 
         # TODO: The key for next nodes need to correspond to the new key for the buckets.
         # TODO: Why do we key into the opponent's nodes as well?
@@ -151,28 +150,31 @@ class Cfr:
                       for p, node in enumerate(nodes)]
 
         # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
-        return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, copy.deepcopy(next_deck),
+        return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, copy.deepcopy(deck),
                          players_folded)
 
     def _get_bucket_key(self, hole_cards, community_cards=[]):
-        # TODO: HARD CODED CONSTANT
-        NUM_BUCKET = 5
-        probability_of_winning = estimate_hole_card_win_rate(50, 2, hole_cards, community_cards)
-        partition = int(math.floor(probability_of_winning * NUM_BUCKET))
-        return partition if partition != NUM_BUCKET else NUM_BUCKET - 1
+        if not community_cards:
+            return HSEval.get_bucket_number(list(map(lambda x: x.__str__(), hole_cards)))
+        else:
+            return HSEval.get_bucket_number(list(map(lambda x: x.__str__(), hole_cards)),
+                                            list(map(lambda x: x.__str__(), community_cards)))
 
     def _cfr_board_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
+        deck = copy.deepcopy(deck)
         num_board_cards = nodes[0].card_count
         selected_board_cards = deck.draw_cards(num_board_cards)
+        all_board_cards = board_cards + selected_board_cards
+        unflattened_board_cards = board_cards + [selected_board_cards]
+                
         # TODO: Check if the hole_cards here belong to the player , need tracing through the code. check hole_cards[0]
         next_nodes = [
-            node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=selected_board_cards)]
+            node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=all_board_cards)]
             for p, node in enumerate(nodes)]
 
         # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
-        return self._cfr(next_nodes, reach_probs,
-                         hole_cards, board_cards + [selected_board_cards], copy.deepcopy(deck),
-                         players_folded)
+        return self._cfr(next_nodes, reach_probs, hole_cards, unflattened_board_cards,
+                        deck, players_folded)
 
     # TODO: Understand calculation of updated strategy probabilities.
     @staticmethod
@@ -193,8 +195,7 @@ class Cfr:
                 node.strategy[a] = 0
             node.strategy_sum[a] += realization_weight * node.strategy[a]
 
-    def _cfr_action(self, nodes, reach_probs,
-                    hole_cards, board_cards, deck, players_folded):
+    def _cfr_action(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         node_player = nodes[0].player
         node = nodes[node_player]
         Cfr._update_node_strategy(node, reach_probs[node_player])
@@ -218,7 +219,7 @@ class Cfr:
             util[a] = action_util
             for player in range(self.player_count):
                 node_util[player] += strategy[a] * action_util[player]
-
+            
         for a in node.children:
             # Calculate regret and add it to regret sums
             regret = util[a][node_player] - node_util[node_player]

@@ -44,4 +44,7 @@ class Deck:
   def __setup_cheat_deck(self):
     cards = [Card.from_id(cid) for cid in self.cheat_card_ids]
     return cards[::-1]
-
+  
+  # Custom override function for debug purpose
+  def __str__(self):
+    return list(map(lambda x : x.__str__(), self.deck))
