@@ -4,6 +4,7 @@ from deuces.evaluator import Evaluator
 from deuces.card import Card as DeucesCard
 import constants
 import math
+import sys
 
 
 def get_winners(players_hole, players_folded, community_cards):
@@ -39,24 +40,15 @@ def get_bucket_number(hole_cards, community_cards = None):
 		points = starting_hand_evaluator(hole_cards)
 		bucket_number = int(math.ceil((points + 1.5) / 21.5 * constants._BUCKET_NUM) - 1)
 	else:
-		new_hole_cards = []
-		for h in hole_cards:
-			new_h = DeucesCard.new(h[1] + h[0].lower())
-			new_hole_cards.append(new_h)
+		hole_cards = list(map(lambda x : DeucesCard.new(x[1] + x[0].lower()), hole_cards))
+		community_cards = list(map(lambda x : DeucesCard.new(x[1] + x[0].lower()), community_cards))
 
-		new_community_cards = []
-		for c in community_cards:
-			new_c = DeucesCard.new(c[1] + c[0].lower())
-			new_community_cards.append(new_c)
-   
 		evaluator = Evaluator()
-		five_cards_ranking = evaluator.evaluate(new_community_cards, new_hole_cards)
+		five_cards_ranking = evaluator.evaluate(hole_cards, community_cards)
 		strength = 1.0 - evaluator.get_five_card_rank_percentage(five_cards_ranking)
 		bucket_number = int(math.ceil(strength * constants._BUCKET_NUM) - 1)
   
-	bucket_number = 0 if bucket_number == -1 else bucket_number
- 
-	return bucket_number
+	return 0 if bucket_number == -1 else bucket_number
 
 def starting_hand_evaluator(hole_cards):
 
