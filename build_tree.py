@@ -18,6 +18,7 @@ class GameTreeBuilder:
             self.players_folded = [False] * game.get_num_players()
             self.pot_commitment = [game.get_blind(p) for p in range(game.get_num_players())]
             self.deck = deck
+            self.players_raise_count = [0] * game.get_num_players()
 
             # Round properties
             self.rounds_left = game.get_num_rounds()
@@ -162,16 +163,15 @@ class GameTreeBuilder:
         round_index = self.game.get_num_rounds() - rounds_left
         next_player = (current_player + 1) % self.game.get_num_players()
         max_pot_commitment = max(pot_commitment)
-        valid_actions = [1]
+        valid_actions = [1] # call
+        
         if not bets_settled:
-            valid_actions.append(0)
-        # TODO: Implement cs3243 logic.
+            valid_actions.append(0) # fold
+                
         if game_state.round_raise_count < self.game.get_max_raises_per_street(round_index) and \
-            (game_state.current_player == 0 and \
-                 game_state.p0_raise < self.game.get_max_raises_per_player_per_game(current_player)) or \
-                    (game_state.current_player == 1 and \
-                        game_state.p0_raise < self.game.get_max_raises_per_player_per_game(current_player)):
-            valid_actions.append(2)
+            (game_state.players_raise_count[game_state.current_player] < self.game.get_max_raises_per_player_per_game(current_player)):
+            valid_actions.append(2) # raise
+            
         for a in valid_actions:
             next_game_state = game_state.next_move_state()
             next_game_state.current_player = next_player
@@ -183,9 +183,9 @@ class GameTreeBuilder:
             elif a == 2:
                 next_game_state.round_raise_count += 1
                 if next_game_state.current_player == 0:
-                    next_game_state.p1_raise += 1
+                    next_game_state.players_raise_count[1] += 1
                 else:
-                    next_game_state.p0_raise += 1
+                    next_game_state.players_raise_count[0] += 1
                 # TODO: Update pot change.
                 next_game_state.pot_commitment[current_player] = \
                     max_pot_commitment + self.game.get_raise_size(round_index)
