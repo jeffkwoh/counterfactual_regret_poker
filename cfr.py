@@ -208,8 +208,7 @@ class Cfr:
                 next_players_folded = players_folded
             # Recursively calculates cfr
             action_util = self._cfr(
-                [node.children[a] for node in nodes],
-                next_reach_probs,
+                [node.children[a] for node in nodes], next_reach_probs,
                 hole_cards, board_cards, deck, next_players_folded)
             util[a] = action_util
             for player in range(self.player_count):
