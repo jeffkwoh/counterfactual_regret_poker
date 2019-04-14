@@ -6,14 +6,14 @@ import random
 import sys
 from hand_evaluation import get_bucket_number
 import json
-
+result_dict = {}
 
 from game_state import State
 class CFRAgent(BasePokerPlayer):
 
   def __init__(self) :
     super(CFRAgent, self).__init__()
-    strategy_file_path = "strategy.txt"
+    strategy_file_path = "strategy1000e.txt"
     strategy = {}
     with open(strategy_file_path, 'r') as strategy_file:
         for line in strategy_file:
@@ -77,6 +77,13 @@ class CFRAgent(BasePokerPlayer):
     pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
+    winner = winners[0]['name']
+    try :
+      if (result_dict[winner]) :
+        result_dict[winner] += 1
+    except KeyError: 
+      result_dict[winner] = 1  
+    print(result_dict)  
     pass
 
 def setup_ai():
