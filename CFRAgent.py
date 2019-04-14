@@ -1,19 +1,18 @@
 from pypokerengine.players import BasePokerPlayer
-import hand_evaluation
+import Group19_hand_evaluation
 import random as rand
 import pprint
 import random
 import sys
-from hand_evaluation import get_bucket_number
+from Group19_hand_evaluation import get_bucket_number
+from Group19_game_state import State
 import json
 
-
-from game_state import State
 class CFRAgent(BasePokerPlayer):
 
   def __init__(self) :
     super(CFRAgent, self).__init__()
-    strategy_file_path = "strategy.txt"
+    strategy_file_path = "Group19_strategy1000e.txt"
     strategy = {}
     with open(strategy_file_path, 'r') as strategy_file:
         for line in strategy_file:
