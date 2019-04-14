@@ -128,10 +128,7 @@ class Cfr:
             return [-pot_commitment[player] if players_folded[player] else prize - pot_commitment[player]
                     for player in range(player_count)]
 
-        flattened_board_cards = reduce(
-            lambda res, cards: res + list(cards), board_cards, [])
-
-        winners = get_winners(hole_cards, players_folded, flattened_board_cards)
+        winners = get_winners(hole_cards, players_folded, board_cards)
         winner_count = len(winners)
         value_per_winner = sum(pot_commitment) / winner_count
         return [value_per_winner - pot_commitment[p] if p in winners else -pot_commitment[p]
@@ -149,7 +146,6 @@ class Cfr:
         next_nodes = [node.children[self._get_bucket_key(hole_cards=next_hole_cards[p])]
                       for p, node in enumerate(nodes)]
 
-        # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
         return self._cfr(next_nodes, reach_probs, next_hole_cards, board_cards, copy.deepcopy(deck),
                          players_folded)
 
@@ -163,17 +159,16 @@ class Cfr:
     def _cfr_board_cards(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
         deck = copy.deepcopy(deck)
         num_board_cards = nodes[0].card_count
-        selected_board_cards = deck.draw_cards(num_board_cards)
-        all_board_cards = board_cards + selected_board_cards
-        unflattened_board_cards = board_cards + [selected_board_cards]
+        if any(isinstance(el, list) for el in board_cards):
+            board_cards = [item for sublist in board_cards for item in sublist] # flatten the list of sublists
+        new_board_cards = deck.draw_cards(num_board_cards)
+        all_board_cards = board_cards + new_board_cards
                 
         # TODO: Check if the hole_cards here belong to the player , need tracing through the code. check hole_cards[0]
-        next_nodes = [
-            node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=all_board_cards)]
+        next_nodes = [node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=all_board_cards)]
             for p, node in enumerate(nodes)]
 
-        # TODO: Defensive deepcopy is used, please analyze if this is actually needed.
-        return self._cfr(next_nodes, reach_probs, hole_cards, unflattened_board_cards,
+        return self._cfr(next_nodes, reach_probs, hole_cards, all_board_cards,
                         deck, players_folded)
 
     # TODO: Understand calculation of updated strategy probabilities.
@@ -213,8 +208,7 @@ class Cfr:
                 next_players_folded = players_folded
             # Recursively calculates cfr
             action_util = self._cfr(
-                [node.children[a] for node in nodes],
-                next_reach_probs,
+                [node.children[a] for node in nodes], next_reach_probs,
                 hole_cards, board_cards, deck, next_players_folded)
             util[a] = action_util
             for player in range(self.player_count):
