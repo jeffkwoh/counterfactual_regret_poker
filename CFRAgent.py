@@ -59,8 +59,6 @@ class CFRAgent(BasePokerPlayer):
             continue
         probability_sum += action_probability
         if choice < probability_sum:
-            print(valid_actions)
-            print(valid_actions[i]['action'])
             return valid_actions[i]['action']
           
     return valid_actions[num_actions-1]['action']     # Return the last action since it could have not been selected due to floating point error
