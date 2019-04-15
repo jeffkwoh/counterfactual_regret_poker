@@ -85,6 +85,8 @@ class State:
 
     def __init__(self, round_state, hole_card_indices, community_card_indices):
         self._round_state = round_state
+        self.hole_cards = hole_card_indices
+        self.community_cards = community_card_indices
         self.p0_uuid = round_state['seats'][0]['uuid']
         self.p1_uuid = round_state['seats'][1]['uuid']
         self.street = self._round_state['street']
@@ -191,6 +193,18 @@ class State:
         self.p0_stack = self._round_state['seats'][0]['stack']
         self.p1_stack = round_state['seats'][1]['stack']
 
+    def get_round_community_cards(self, round) :
+        """Returns a list of commuunity cards based on that round.
+        
+        Returns:
+            int: Returns a list of commuunity cards based on that round.
+        """
+        if round == 0 :
+            return []
+        else :
+            len_num_cards = 2 + round
+            return self.community_cards[0:len_num_cards]
+        
     def get_num_hole_cards(self) :
         """Returns number of hole cards each player receives at the beginning of the game.
         
@@ -210,7 +224,7 @@ class State:
             ValueError: When card_index is greater or equal
                         to number of hole cards in the game.
         """
-        return hole_card_indices[card_index]
+        return self.hole_cards[card_index]
 
     def get_round(self) :
         """Returns index of the current round of the game.
@@ -245,7 +259,7 @@ class State:
                         to number of board cards in current
                         round.
         """
-        return community_card_indices[card_index]
+        return self.community_cards[card_index]
 
     def get_action_type(self, round_index, action_index) : 
         """Returns type of action on given index taken in given round.

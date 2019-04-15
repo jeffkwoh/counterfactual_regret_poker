@@ -34,7 +34,8 @@ class CFRAgent(BasePokerPlayer):
     num_rounds = state.get_round() + 1
 
     for i in range(num_rounds) :
-      bucket_number = get_bucket_number(hole_card_chars, community_card_chars)
+      round_community_cards = state.get_round_community_cards(i)
+      bucket_number = get_bucket_number(hole_card_chars, round_community_cards)
       info_set += str(bucket_number) + ':'
       street = state.get_round_street(i)
       action_histories_street = state.get_round_street_action_histories(street)
@@ -84,7 +85,6 @@ class CFRAgent(BasePokerPlayer):
     except KeyError: 
       result_dict[winner] = 1  
     print(result_dict)
-    print(round_state)  
     pass
 
 def setup_ai():
