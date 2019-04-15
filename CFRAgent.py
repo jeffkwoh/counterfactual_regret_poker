@@ -7,6 +7,7 @@ import sys
 from Group19_hand_evaluation import get_bucket_number
 from Group19_game_state import State
 import json
+result_dict = {}
 
 class CFRAgent(BasePokerPlayer):
 
@@ -57,11 +58,11 @@ class CFRAgent(BasePokerPlayer):
             continue
         probability_sum += action_probability
         if choice < probability_sum:
+            print(valid_actions)
+            print(valid_actions[i]['action'])
             return valid_actions[i]['action']
-    # Return the last action since it could have not been selected due to floating point error
-    return valid_actions[num_actions-1]['action']
-
-
+          
+    return valid_actions[num_actions-1]['action']     # Return the last action since it could have not been selected due to floating point error
 
   def receive_game_start_message(self, game_info):
     pass
@@ -76,6 +77,14 @@ class CFRAgent(BasePokerPlayer):
     pass
 
   def receive_round_result_message(self, winners, hand_info, round_state):
+    winner = winners[0]['name']
+    try :
+      if (result_dict[winner]) :
+        result_dict[winner] += 1
+    except KeyError: 
+      result_dict[winner] = 1  
+    print(result_dict)
+    print(round_state)  
     pass
 
 def setup_ai():
