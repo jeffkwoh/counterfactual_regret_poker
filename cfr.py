@@ -2,7 +2,7 @@ import operator
 import copy
 from functools import reduce
 import math
-
+from multiprocessing import Process, Lock, Manager
 
 from build_tree import GameTreeBuilder
 from constants import NUM_ACTIONS
@@ -195,10 +195,14 @@ class Cfr:
         node = nodes[node_player]
         Cfr._update_node_strategy(node, reach_probs[node_player])
         strategy = node.strategy
-        util = [None] * NUM_ACTIONS
-        node_util = [0] * self.player_count
-        for a in node.children:
-            next_reach_probs = list(reach_probs)
+        
+        if board_cards:
+            """ Do not fork new multiprocessing.Process after 'preflop' street. """
+            util = [None] * NUM_ACTIONS
+            node_util = [0] * self.player_count
+            
+            for a in node.children:
+                next_reach_probs = list(reach_probs)
             next_reach_probs[node_player] *= strategy[a]
 
             if a == 0:
@@ -213,6 +217,44 @@ class Cfr:
             util[a] = action_util
             for player in range(self.player_count):
                 node_util[player] += strategy[a] * action_util[player]
+        else:
+            """ 
+            Fork new multiprocessing.Process to iterate through child nodes of current action nodes 
+            if current street is 'preflop' street.
+            """
+            # use multiprocessing process table to keep track child processes of current process
+            procs = []
+            
+            # initialise semaphore using multiprocessing.Lock
+            lock = Lock()
+
+            # allocate shared memory lists using multiprocessing.manager
+            manager = Manager()
+            util = manager.list()
+            for i in range(NUM_ACTIONS):
+                util.append(None)
+            node_util = manager.list()
+            for i in range(self.player_count):
+                node_util.append(0)
+                    
+            for a in node.children:
+                next_reach_probs = list(reach_probs)
+                next_reach_probs[node_player] *= strategy[a]
+
+                if a == 0:
+                    next_players_folded = list(players_folded)
+                    next_players_folded[node_player] = True
+                else:
+                    next_players_folded = players_folded
+                    
+                # spawn a new process to calculate cfr values for current action
+                proc = Process(target=self._cfr_action_process, args=(nodes, next_reach_probs, hole_cards, 
+                                board_cards, deck, next_players_folded, util, node_util, strategy, a, lock))
+                procs.append(proc)
+                proc.start()
+            
+            for proc in procs:
+                proc.join() # current process will wait here until all child processes finish
             
         for a in node.children:
             # Calculate regret and add it to regret sums
@@ -222,4 +264,20 @@ class Cfr:
             reach_prob = reduce(operator.mul, opponent_reach_probs, 1)
             node.regret_sum[a] += regret * reach_prob
 
-        return node_util
+        return [x for x in node_util] if type(node_util) != type(list) else node_util
+
+    def _cfr_action_process(self, nodes, next_reach_probs, hole_cards, board_cards, deck,
+                            next_players_folded, util, node_util, strategy, a, lock):
+        # Recursively calculates cfr without parallelism anymore
+        action_util = self._cfr([node.children[a] for node in nodes], next_reach_probs,
+                                    hole_cards, board_cards, deck, next_players_folded)
+        
+        # prevent race condition using multiprocessing.Lock
+        lock.acquire() 
+        util[a] = action_util
+        for player in range(self.player_count):
+            node_util[player] += strategy[a] * action_util[player]
+        lock.release()
+        
+        return
+    
