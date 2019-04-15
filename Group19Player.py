@@ -79,4 +79,4 @@ class Group19Player(BasePokerPlayer):
     pass
 
 def setup_ai():
-  return CFRAgent()
+  return Group19Player()

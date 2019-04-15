@@ -9,6 +9,7 @@ class DataEncoder:
   PAY_INFO_PAY_TILL_END_STR = "participating"
   PAY_INFO_ALLIN_STR = "allin"
   PAY_INFO_FOLDED_STR = "folded"
+  GAME_WINNERS_DICT = {}
 
   @classmethod
   def encode_player(self, player, holecard=False):
@@ -40,6 +41,10 @@ class DataEncoder:
 
   @classmethod
   def encode_game_information(self, config, seats):
+    num_rounds = 0
+    for winner, wins in self.GAME_WINNERS_DICT.items() :
+      num_rounds += wins
+      
     hsh = {
         "player_num" : len(seats.players),
         "rule": {
@@ -48,9 +53,12 @@ class DataEncoder:
           "small_blind_amount": config["small_blind_amount"],
           "ante": config["ante"],
           "blind_structure": config["blind_structure"]
-        }
+        },
+        "result" : self.GAME_WINNERS_DICT,
+        "num_rounds" : num_rounds
     }
     hsh.update(self.encode_seats(seats))
+    self.GAME_WINNERS_DICT = {}
     return hsh
 
   @classmethod
@@ -90,7 +98,15 @@ class DataEncoder:
 
   @classmethod
   def encode_winners(self, winners):
-    return { "winners": self.__encode_players(winners) }
+    winners_result = self.__encode_players(winners)
+    for winner in winners_result : 
+      winner_name = winner['name']
+    try :
+      if (self.GAME_WINNERS_DICT[winner_name]) :
+        self.GAME_WINNERS_DICT[winner_name] += 1
+    except KeyError :
+      self.GAME_WINNERS_DICT[winner_name] = 1   
+    return { "winners": winners_result }
 
   @classmethod
   def encode_round_state(self, state):

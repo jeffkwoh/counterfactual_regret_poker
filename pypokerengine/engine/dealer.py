@@ -1,7 +1,7 @@
 import random
 import pprint
 from collections import OrderedDict
-
+import pprint
 from pypokerengine.engine.poker_constants import PokerConstants as Const
 from pypokerengine.engine.table import Table
 from pypokerengine.engine.player import Player
@@ -170,6 +170,8 @@ class Dealer:
   def __generate_game_result(self, max_round, seats):
     config = self.__gen_config(max_round)
     result_message = MessageBuilder.build_game_result_message(config, seats)
+    # pp = pprint.PrettyPrinter(indent=4)
+    # pp.pprint(result_message)
     self.message_summarizer.summarize(result_message)
     return result_message
 

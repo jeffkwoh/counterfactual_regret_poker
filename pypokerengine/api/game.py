@@ -19,7 +19,9 @@ def start_poker(config, verbose=2):
 def _format_result(result_message):
     return {
             "rule": result_message["message"]["game_information"]["rule"],
-            "players": result_message["message"]["game_information"]["seats"]
+            "players": result_message["message"]["game_information"]["seats"],
+            "result" : result_message["message"]["game_information"]["result"],
+            "num_rounds" : result_message["message"]["game_information"]["num_rounds"]
             }
 
 class Config(object):
