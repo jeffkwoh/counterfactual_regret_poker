@@ -203,24 +203,24 @@ class Cfr:
             
             for a in node.children:
                 next_reach_probs = list(reach_probs)
-            next_reach_probs[node_player] *= strategy[a]
+                next_reach_probs[node_player] *= strategy[a]
 
-            if a == 0:
-                next_players_folded = list(players_folded)
-                next_players_folded[node_player] = True
-            else:
-                next_players_folded = players_folded
-            # Recursively calculates cfr
-            action_util = self._cfr(
-                [node.children[a] for node in nodes], next_reach_probs,
-                hole_cards, board_cards, deck, next_players_folded)
-            util[a] = action_util
-            for player in range(self.player_count):
-                node_util[player] += strategy[a] * action_util[player]
+                if a == 0:
+                    next_players_folded = list(players_folded)
+                    next_players_folded[node_player] = True
+                else:
+                    next_players_folded = players_folded
+                # Recursively calculates cfr
+                action_util = self._cfr(
+                    [node.children[a] for node in nodes], next_reach_probs,
+                    hole_cards, board_cards, deck, next_players_folded)
+                util[a] = action_util
+                for player in range(self.player_count):
+                    node_util[player] += strategy[a] * action_util[player]
         else:
             """ 
             Fork new multiprocessing.Process to iterate through child nodes of current action nodes 
-            if current street is 'preflop' street.
+            if current action node is direct child of hole_card node.
             """
             # use multiprocessing process table to keep track child processes of current process
             procs = []
