@@ -1,7 +1,7 @@
 import copy
 
 from game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
-from constants import _BUCKET_NUM
+from Group19_constants import _BUCKET_NUM
 
 # TODO: Remove dirty global Var
 

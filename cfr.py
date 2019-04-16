@@ -5,11 +5,11 @@ import math
 from multiprocessing import Process, Lock, Manager
 
 from build_tree import GameTreeBuilder
-from constants import NUM_ACTIONS
+from Group19_constants import NUM_ACTIONS
 from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
-from hand_evaluation import get_winners
+from Group19_hand_evaluation import get_winners
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
-import hand_evaluation as HSEval
+import Group19_hand_evaluation as HSEval
 
 try:
     from tqdm import tqdm
