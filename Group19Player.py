@@ -13,7 +13,7 @@ class Group19Player(BasePokerPlayer):
 
   def __init__(self) :
     super(Group19Player, self).__init__()
-    strategy_file_path = "Group19_strategy1000e.txt"
+    strategy_file_path = "strategy10000e.txt"
     strategy = {}
     with open(strategy_file_path, 'r') as strategy_file:
         for line in strategy_file:
