@@ -10,6 +10,8 @@ from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from hand_evaluation import get_winners
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
 import hand_evaluation as HSEval
+from joblib import Parallel, delayed
+
 
 try:
     from tqdm import tqdm
@@ -197,23 +199,11 @@ class Cfr:
         strategy = node.strategy
         util = [None] * NUM_ACTIONS
         node_util = [0] * self.player_count
-        for a in node.children:
-            next_reach_probs = list(reach_probs)
-            next_reach_probs[node_player] *= strategy[a]
+        
+        Parallel(n_jobs=-1)(delayed(self._cfr_action_process)(nodes, reach_probs, node_player, 
+            hole_cards, board_cards, deck, util, node_util, strategy, a, players_folded) for a in node.children)
+        print(f'OUTSIDE FUNC: {util}')
 
-            if a == 0:
-                next_players_folded = list(players_folded)
-                next_players_folded[node_player] = True
-            else:
-                next_players_folded = players_folded
-            # Recursively calculates cfr
-            action_util = self._cfr(
-                [node.children[a] for node in nodes], next_reach_probs,
-                hole_cards, board_cards, deck, next_players_folded)
-            util[a] = action_util
-            for player in range(self.player_count):
-                node_util[player] += strategy[a] * action_util[player]
-            
         for a in node.children:
             # Calculate regret and add it to regret sums
             regret = util[a][node_player] - node_util[node_player]
@@ -223,3 +213,25 @@ class Cfr:
             node.regret_sum[a] += regret * reach_prob
 
         return node_util
+
+    def _cfr_action_process(self, nodes, reach_probs, node_player, hole_cards, board_cards, 
+                            deck, util, node_util, strategy, a, players_folded):
+        next_reach_probs = list(reach_probs)
+        next_reach_probs[node_player] *= strategy[a]
+
+        if a == 0:
+            next_players_folded = list(players_folded)
+            next_players_folded[node_player] = True
+        else:
+            next_players_folded = players_folded
+        # Recursively calculates cfr
+        action_util = self._cfr(
+            [node.children[a] for node in nodes], next_reach_probs,
+            hole_cards, board_cards, deck, next_players_folded)
+        util[a] = action_util
+        print(f'IN FUNC: {util}')
+        for player in range(self.player_count):
+            node_util[player] += strategy[a] * action_util[player]
+
+        return
+    
