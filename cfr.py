@@ -3,7 +3,6 @@ import copy
 from functools import reduce
 import math
 
-
 from build_tree import GameTreeBuilder
 from constants import NUM_ACTIONS
 from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
@@ -11,7 +10,6 @@ from hand_evaluation import get_winners
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
 import hand_evaluation as HSEval
 from joblib import Parallel, delayed
-
 
 try:
     from tqdm import tqdm
@@ -141,7 +139,8 @@ class Cfr:
         next_hole_cards = []
 
         for p in range(self.player_count):
-            next_hole_cards.append(deck.draw_cards(num_hole_cards)) # Draw_cards is a mutating function with side effects
+            next_hole_cards.append(
+                deck.draw_cards(num_hole_cards))  # Draw_cards is a mutating function with side effects
 
         # TODO: The key for next nodes need to correspond to the new key for the buckets.
         # TODO: Why do we key into the opponent's nodes as well?
@@ -162,16 +161,16 @@ class Cfr:
         deck = copy.deepcopy(deck)
         num_board_cards = nodes[0].card_count
         if any(isinstance(el, list) for el in board_cards):
-            board_cards = [item for sublist in board_cards for item in sublist] # flatten the list of sublists
+            board_cards = [item for sublist in board_cards for item in sublist]  # flatten the list of sublists
         new_board_cards = deck.draw_cards(num_board_cards)
         all_board_cards = board_cards + new_board_cards
-                
+
         # TODO: Check if the hole_cards here belong to the player , need tracing through the code. check hole_cards[0]
         next_nodes = [node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=all_board_cards)]
-            for p, node in enumerate(nodes)]
+                      for p, node in enumerate(nodes)]
 
         return self._cfr(next_nodes, reach_probs, hole_cards, all_board_cards,
-                        deck, players_folded)
+                         deck, players_folded)
 
     # TODO: Understand calculation of updated strategy probabilities.
     @staticmethod
@@ -199,10 +198,16 @@ class Cfr:
         strategy = node.strategy
         util = [None] * NUM_ACTIONS
         node_util = [0] * self.player_count
-        
-        Parallel(n_jobs=-1)(delayed(self._cfr_action_process)(nodes, reach_probs, node_player, 
-            hole_cards, board_cards, deck, util, node_util, strategy, a, players_folded) for a in node.children)
-        print(f'OUTSIDE FUNC: {util}')
+
+        jobs_result = Parallel(n_jobs=-1)(delayed(self._cfr_action_process)
+                        (nodes, reach_probs, node_player, hole_cards, board_cards, 
+                        deck, strategy, a, players_folded) for a in node.children)
+
+        for action, action_util in jobs_result:
+            util[action] = action_util
+            for player in range(self.player_count):
+                node_util[player] += strategy[action] * action_util[player]
+
 
         for a in node.children:
             # Calculate regret and add it to regret sums
@@ -214,8 +219,8 @@ class Cfr:
 
         return node_util
 
-    def _cfr_action_process(self, nodes, reach_probs, node_player, hole_cards, board_cards, 
-                            deck, util, node_util, strategy, a, players_folded):
+    def _cfr_action_process(self, nodes, reach_probs, node_player, hole_cards, 
+                            board_cards, deck, strategy, a, players_folded):
         next_reach_probs = list(reach_probs)
         next_reach_probs[node_player] *= strategy[a]
 
@@ -228,10 +233,5 @@ class Cfr:
         action_util = self._cfr(
             [node.children[a] for node in nodes], next_reach_probs,
             hole_cards, board_cards, deck, next_players_folded)
-        util[a] = action_util
-        print(f'IN FUNC: {util}')
-        for player in range(self.player_count):
-            node_util[player] += strategy[a] * action_util[player]
 
-        return
-    
+        return a, action_util
