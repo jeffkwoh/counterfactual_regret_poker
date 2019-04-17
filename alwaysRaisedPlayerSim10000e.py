@@ -26,7 +26,6 @@ if __name__ == "__main__":
         config.register_player(name="Group19Player", algorithm=Group19Player())
         game_result = start_poker(config, verbose=0)
 
-
         player1 = game_result['players'][0]
         player1_name = player1['name']
         player1_stack = player1['stack']
@@ -61,7 +60,6 @@ if __name__ == "__main__":
             except KeyError :
                 game_data[player2_name] = 0.5
                 
-        print(i)        
 
     results.write(json.dumps(game_data))
     results.write("\n")
