@@ -15,9 +15,9 @@ def tree_str(root):
     return result
 
 
-class Node:
+class Node(object):
     def __init__(self, parent):
-        super().__init__()
+        super(Node, self).__init__()
         self.parent = parent
         self.children = {}
 
@@ -49,25 +49,25 @@ class Node:
 
 class TerminalNode(Node):
     def __init__(self, parent, pot_commitment):
-        super().__init__(parent)
+        super(TerminalNode, self).__init__(parent)
         self.pot_commitment = pot_commitment
 
 
 class HoleCardsNode(Node):
     def __init__(self, parent, card_count):
-        super().__init__(parent)
+        super(HoleCardsNode, self).__init__(parent)
         self.card_count = card_count
 
 
 class BoardCardsNode(Node):
     def __init__(self, parent, card_count):
-        super().__init__(parent)
+        super(BoardCardsNode, self).__init__(parent)
         self.card_count = card_count
 
 
 class ActionNode(Node):
     def __init__(self, parent, player):
-        super().__init__(parent)
+        super(ActionNode, self).__init__(parent)
         self.player = player
         self.regret_sum = [0] * NUM_ACTIONS
         self.strategy = [0] * NUM_ACTIONS
