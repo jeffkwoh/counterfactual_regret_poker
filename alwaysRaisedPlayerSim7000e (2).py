@@ -1,8 +1,6 @@
 from pypokerengine.api.game import setup_config, start_poker
 from raise_player import RaisedPlayer
-from honest_player import HonestPlayer
-from Group19Player1000e import Group19Player
-from randomplayer import RandomPlayer
+from Group19Player7000e import Group19Player
 import json
 import sys 
 
@@ -20,12 +18,12 @@ if __name__ == "__main__":
     
     game_data = {}
     
-    for i in range(100) :
+    for i in range(1000) :
         #TODO:config the config as our wish
         config = setup_config(max_round=500, initial_stack=10000, small_blind_amount=20)
 
-        config.register_player(name="RandomPlayer", algorithm=RandomPlayer())
-        config.register_player(name="HonestPlayer", algorithm=HonestPlayer())
+        config.register_player(name="AlwaysRaisedPlayer", algorithm=RaisedPlayer())
+        config.register_player(name="Group19Player", algorithm=Group19Player())
         game_result = start_poker(config, verbose=0)
 
 

@@ -19,7 +19,7 @@ if __name__ == "__main__":
     
     game_data = {}
     
-    for i in range(1000) :
+    for i in range(100) :
         #TODO:config the config as our wish
         config = setup_config(max_round=500, initial_stack=10000, small_blind_amount=20)
 

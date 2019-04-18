@@ -24,8 +24,8 @@ if __name__ == "__main__":
         #TODO:config the config as our wish
         config = setup_config(max_round=500, initial_stack=10000, small_blind_amount=20)
 
-        config.register_player(name="RandomPlayer", algorithm=RandomPlayer())
-        config.register_player(name="HonestPlayer", algorithm=HonestPlayer())
+        config.register_player(name="AlwaysRandomPlayer", algorithm=RandomPlayer())
+        config.register_player(name="Group19Player", algorithm=Group19Player())
         game_result = start_poker(config, verbose=0)
 
 
