@@ -3,6 +3,7 @@ import resource
 
 # import acpc_python_client as acpc
 from game import Game
+import time
 try:
     from tqdm import tqdm
 except ImportError:
@@ -99,8 +100,14 @@ if __name__ == "__main__":
 
     iterations = int(sys.argv[1])
     output_path = sys.argv[2]
+    start_build = time.time()
     game = Game()
     cfr = Cfr(game)
+    end_build = time.time()
+    print("build time: " + str(end_build - start_build))
+    start_train = time.time()
     cfr.train(iterations)
+    end_train = time.time()
+    print("train time: " + str(end_train - start_train))
 
     _write_strategy(cfr.game_tree, iterations, output_path)
