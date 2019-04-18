@@ -1,6 +1,6 @@
 from pypokerengine.api.game import setup_config, start_poker
 from raise_player import RaisedPlayer
-from Group19Player1000e import Group19Player
+from Group19Player8000e import Group19Player
 from honest_player import HonestPlayer
 from randomplayer import RandomPlayer
 import json
