@@ -1,4 +1,4 @@
-from constants import NUM_ACTIONS
+from constants import NUM_ACTIONS, FOLD, CALL, RAISE
 
 
 def _tree_str_rec(root, offset):
@@ -38,11 +38,11 @@ class Node(object):
             if parent_str and not parent_str.endswith(':'):
                 child_key = ':' + child_key
         elif parent_type == ActionNode:
-            if child_key == 0:
+            if child_key == FOLD:
                 child_key = 'f'
-            elif child_key == 1:
+            elif child_key == CALL:
                 child_key = 'c'
-            elif child_key == 2:
+            elif child_key == RAISE:
                 child_key = 'r'
         return parent_str + child_key
 
