@@ -49,8 +49,12 @@ class BasePokerPlayer(object):
     for va in valid_actions:
       if action == va['action'] :
         return action
-    raise ValueError('Invalid Action Called')
-
+    # print('[BUGFIX-TA] : Action Called %s, valid actions : '%action)
+    # print(valid_actions)
+    # time.sleep(10)
+    return 'fold'
+    #raise ValueError('Invalid Action Called')
+    
   def receive_notification(self, message):
     """Called from Dealer when notification received from RoundManager"""
     msg_type = message["message_type"]
