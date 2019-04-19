@@ -1,6 +1,6 @@
 from pypokerengine.engine.hand_evaluator import HandEvaluator
 from pypokerengine.engine.card import Card as PyCard
-from deuces.evaluator import Evaluator
+from deuces.evaluator import Evaluator as DeucesEvaluator
 from deuces.card import Card as DeucesCard
 import constants
 import math
@@ -43,7 +43,7 @@ def get_bucket_number(hole_cards, community_cards = None):
 		hole_cards = list(map(lambda x : DeucesCard.new(x[1] + x[0].lower()), hole_cards))
 		community_cards = list(map(lambda x : DeucesCard.new(x[1] + x[0].lower()), community_cards))
 
-		evaluator = Evaluator()
+		evaluator = DeucesEvaluator()
 		five_cards_ranking = evaluator.evaluate(hole_cards, community_cards)
 		strength = 1.0 - evaluator.get_five_card_rank_percentage(five_cards_ranking)
 		bucket_number = int(math.ceil(strength * constants.BUCKET_NUM) - 1)
