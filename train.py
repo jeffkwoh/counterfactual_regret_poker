@@ -1,10 +1,10 @@
 import resource
 import sys
 
-from cfr import Cfr
+from cfr_utils.cfr import Cfr
 from constants import CALL, FOLD
-from game import Game
-from game_tree import ActionNode, BoardCardsNode, HoleCardsNode
+from cfr_utils.game import Game
+from cfr_utils.game_tree import ActionNode, BoardCardsNode, HoleCardsNode
 
 try:
     from tqdm import tqdm

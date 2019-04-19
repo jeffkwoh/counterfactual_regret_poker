@@ -1,14 +1,13 @@
-from pypokerengine.players import BasePokerPlayer
-import hand_evaluation
-import random as rand
-import pprint
-import random
-import sys
-from hand_evaluation import get_bucket_number
 import json
+import pprint
+import random as rand
+import sys
 
-
+from cfr_utils.hand_evaluation import get_bucket_number
 from game_state import State
+from pypokerengine.players import BasePokerPlayer
+
+
 class CFRAgent(BasePokerPlayer):
 
   def __init__(self) :
@@ -48,9 +47,10 @@ class CFRAgent(BasePokerPlayer):
       if i != num_rounds - 1 :
         info_set += '::'
     
+    """ Select the strategy based on current state of the game the agent is at. """
     node_strategy = self.strategy[info_set]
     
-    choice = random.random()
+    choice = rand.random()
     probability_sum = 0
     num_actions = len(valid_actions)
     for i in range(num_actions):
@@ -60,7 +60,8 @@ class CFRAgent(BasePokerPlayer):
         probability_sum += action_probability
         if choice < probability_sum:
             return valid_actions[i]['action']
-    # Return the last action since it could have not been selected due to floating point error
+          
+    """ Return the last action since it could have not been selected due to floating point error. """
     return valid_actions[num_actions-1]['action']
 
 
