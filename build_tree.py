@@ -1,9 +1,7 @@
 import copy
 
-from game_tree import HoleCardsNode, ActionNode, TerminalNode, BoardCardsNode
-from constants import _BUCKET_NUM
-
-# TODO: Remove dirty global Var
+from constants import BUCKET_NUM, CALL, FOLD, RAISE
+from game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
 
 
 class GameTreeBuilder:
@@ -11,13 +9,13 @@ class GameTreeBuilder:
         """State of the game passed down through the recursive tree builder."""
 
         def __init__(self, game, bucket_sequence):
-            # Game properties
+            """ Game properties """
             self.players_folded = [False] * game.get_num_players()
             self.pot_commitment = [game.get_blind(p) for p in range(game.get_num_players())]
             self.bucket_sequence = bucket_sequence
             self.players_raise_count = [0] * game.get_num_players()
 
-            # Round properties
+            """ Round properties """
             self.rounds_left = game.get_num_rounds()
             self.round_raise_count = 0
             self.players_acted = 0
@@ -42,11 +40,10 @@ class GameTreeBuilder:
         self.game = game
 
     def build_tree(self):
-        """Builds and returns the game tree."""
+        """Builds and returns a game tree rooted at HoleCardsNode."""
 
-        # First generate hole cards node which is only generated once at the beginning of the game
         root = HoleCardsNode(None, self.game.get_num_hole_cards())
-        for bucket in range(_BUCKET_NUM):
+        for bucket in range(BUCKET_NUM):
             game_state = GameTreeBuilder.GameState(self.game, [bucket])
             self._generate_board_cards_node(root, bucket, game_state)
 
@@ -54,7 +51,7 @@ class GameTreeBuilder:
 
     def remove_hole_cards(self, deck, hole_cards_indexes):
         next_deck = list(deck)
-        # Delete the two Hole cards
+        """ Delete the two Hole cards """
         del next_deck[hole_cards_indexes[0]]
         del next_deck[hole_cards_indexes[1] - 1]
         return next_deck
@@ -69,7 +66,7 @@ class GameTreeBuilder:
             new_node = BoardCardsNode(parent, num_board_cards)
             parent.children[child_key] = new_node
 
-            bucket_numbers = range(_BUCKET_NUM)
+            bucket_numbers = range(BUCKET_NUM)
             for bucket in bucket_numbers:
                 next_game_state = copy.deepcopy(game_state)
                 self._generate_action_node(new_node, bucket, next_game_state)
@@ -91,14 +88,14 @@ class GameTreeBuilder:
         all_acted = game_state.players_acted >= (player_count - sum(players_folded))
         if bets_settled and all_acted:
             if rounds_left > 1 and sum(players_folded) < player_count - 1:
-                # Start next game round with new board cards node
-                next_game_state = game_state.next_round_state(child_key)  # TODO: Replace with taking in bucket seq???
+                """ Start next game round with new board cards node """
+                next_game_state = game_state.next_round_state(child_key)
                 next_game_state.current_player = \
                     self.game.get_first_player(self.game.get_num_rounds() - rounds_left + 1)
 
                 self._generate_board_cards_node(parent, child_key, next_game_state)
             else:
-                # This game tree branch ended, close it with terminal node
+                """ This game tree branch ended, close it with terminal node """
                 new_node = TerminalNode(parent, pot_commitment)
                 parent.children[child_key] = new_node
             return
@@ -109,32 +106,31 @@ class GameTreeBuilder:
         round_index = self.game.get_num_rounds() - rounds_left
         next_player = (current_player + 1) % self.game.get_num_players()
         max_pot_commitment = max(pot_commitment)
-        valid_actions = [1] # call
+        valid_actions = [CALL]
         
         if not bets_settled:
-            valid_actions.append(0) # fold
+            valid_actions.append(FOLD)
                 
         if game_state.round_raise_count < self.game.get_max_raises_per_street(round_index) and \
             (game_state.players_raise_count[game_state.current_player] < self.game.get_max_raises_per_player_per_game(current_player)):
-            valid_actions.append(2) # raise
+            valid_actions.append(RAISE)
             
         for a in valid_actions:
             next_game_state = game_state.next_move_state()
             next_game_state.current_player = next_player
 
-            if a == 0:
+            if a == FOLD:
                 next_game_state.players_folded[current_player] = True
-            elif a == 1:
+            elif a == CALL:
                 next_game_state.pot_commitment[current_player] = max_pot_commitment
-            elif a == 2:
+            elif a == RAISE:
                 next_game_state.round_raise_count += 1
                 if next_game_state.current_player == 0:
                     next_game_state.players_raise_count[1] += 1
                 else:
                     next_game_state.players_raise_count[0] += 1
-                # TODO: Update pot change.
+
                 next_game_state.pot_commitment[current_player] = \
                     max_pot_commitment + self.game.get_raise_size(round_index)
 
             self._generate_action_node(new_node, a, next_game_state)
-            

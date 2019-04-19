@@ -38,7 +38,7 @@ def get_bucket_number(hole_cards, community_cards = None):
     """
 	if not community_cards:
 		points = starting_hand_evaluator(hole_cards)
-		bucket_number = int(math.ceil((points + 1.5) / 21.5 * constants._BUCKET_NUM) - 1)
+		bucket_number = int(math.ceil((points + 1.5) / 21.5 * constants.BUCKET_NUM) - 1)
 	else:
 		hole_cards = list(map(lambda x : DeucesCard.new(x[1] + x[0].lower()), hole_cards))
 		community_cards = list(map(lambda x : DeucesCard.new(x[1] + x[0].lower()), community_cards))
@@ -46,7 +46,7 @@ def get_bucket_number(hole_cards, community_cards = None):
 		evaluator = Evaluator()
 		five_cards_ranking = evaluator.evaluate(hole_cards, community_cards)
 		strength = 1.0 - evaluator.get_five_card_rank_percentage(five_cards_ranking)
-		bucket_number = int(math.ceil(strength * constants._BUCKET_NUM) - 1)
+		bucket_number = int(math.ceil(strength * constants.BUCKET_NUM) - 1)
   
 	return 0 if bucket_number == -1 else bucket_number
 

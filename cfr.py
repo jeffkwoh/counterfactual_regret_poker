@@ -9,7 +9,11 @@ from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
 from hand_evaluation import get_winners
 from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
 import hand_evaluation as HSEval
-from joblib import Parallel, delayed
+
+try:
+    from joblib import Parallel, delayed
+except ImportError:
+    print('!!! Install joblib library to enable  more efficient cfr training on multiple threads !!!\n')
 
 try:
     from tqdm import tqdm
@@ -199,9 +203,16 @@ class Cfr:
         util = [None] * NUM_ACTIONS
         node_util = [0] * self.player_count
 
-        jobs_result = Parallel(n_jobs=-1)(delayed(self._cfr_action_process)
+        try:
+            """ use multiprocessing here, if joblib is installed. """
+            jobs_result = Parallel(n_jobs=-1)(delayed(self._cfr_action_process)
                         (nodes, reach_probs, node_player, hole_cards, board_cards, 
                         deck, strategy, a, players_folded) for a in node.children)
+        except NameError:
+            jobs_result = []
+            for a in node.children:
+                jobs_result.append(self._cfr_action_process(nodes, reach_probs, node_player, 
+                        hole_cards, board_cards, deck, strategy, a, players_folded))
 
         for action, action_util in jobs_result:
             util[action] = action_util
@@ -210,7 +221,6 @@ class Cfr:
 
 
         for a in node.children:
-            # Calculate regret and add it to regret sums
             regret = util[a][node_player] - node_util[node_player]
 
             opponent_reach_probs = reach_probs[0:node_player] + reach_probs[node_player + 1:]
@@ -229,7 +239,8 @@ class Cfr:
             next_players_folded[node_player] = True
         else:
             next_players_folded = players_folded
-        # Recursively calculates cfr
+            
+        """ Recursively calculates cfr """
         action_util = self._cfr(
             [node.children[a] for node in nodes], next_reach_probs,
             hole_cards, board_cards, deck, next_players_folded)
