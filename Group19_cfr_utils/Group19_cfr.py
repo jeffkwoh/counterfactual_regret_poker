@@ -5,7 +5,7 @@ from functools import reduce
 
 import Group19_cfr_utils.Group19_hand_evaluation as HSEval
 from Group19_cfr_utils.Group19_build_tree import GameTreeBuilder
-from constants import NUM_ACTIONS, FOLD
+from Group19_constants import NUM_ACTIONS, FOLD
 from Group19_cfr_utils.Group19_game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
 from pypokerengine.utils.card_utils import (estimate_hole_card_win_rate,
                                             gen_deck)

@@ -214,9 +214,10 @@ class Cfr:
         node_util = [0] * self.player_count
 
         try:
-            jobs_result = Parallel(n_jobs=-1)(delayed(self._cfr_action_process)
-                        (nodes, reach_probs, node_player, hole_cards, board_cards, 
-                        deck, strategy, a, players_folded) for a in node.children)
+            with joblib.parallel_backend('dask'):
+                jobs_result = Parallel(n_jobs=-1, verbose=100)(delayed(self._cfr_action_process)
+                            (nodes, reach_probs, node_player, hole_cards, board_cards,
+                            deck, strategy, a, players_folded) for a in node.children)
         except NameError:
             jobs_result = []
             for a in node.children:

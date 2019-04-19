@@ -1,7 +1,7 @@
 import sys
 
 from Group19_cfr_utils.Group19_cfr import Cfr
-from constants import CALL, FOLD
+from Group19_constants import CALL, FOLD
 from Group19_cfr_utils.Group19_game import Game
 from Group19_cfr_utils.Group19_game_tree import ActionNode, BoardCardsNode, HoleCardsNode
 

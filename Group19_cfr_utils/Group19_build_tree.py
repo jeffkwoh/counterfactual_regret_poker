@@ -1,6 +1,6 @@
 import copy
 
-from constants import BUCKET_NUM, CALL, FOLD, RAISE
+from Group19_constants import BUCKET_NUM, CALL, FOLD, RAISE
 from Group19_cfr_utils.Group19_game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
 
 
