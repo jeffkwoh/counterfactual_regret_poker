@@ -3,11 +3,10 @@ import math
 import operator
 from functools import reduce
 
-import hand_evaluation as HSEval
-from build_tree import GameTreeBuilder
+import cfr_utils.hand_evaluation as HSEval
+from cfr_utils.build_tree import GameTreeBuilder
 from constants import NUM_ACTIONS, FOLD
-from game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
-from hand_evaluation import get_winners
+from cfr_utils.game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
 from pypokerengine.utils.card_utils import (estimate_hole_card_win_rate,
                                             gen_deck)
 
@@ -137,7 +136,7 @@ class Cfr:
             return [-pot_commitment[player] if players_folded[player] else prize - pot_commitment[player]
                     for player in range(player_count)]
 
-        winners = get_winners(hole_cards, players_folded, board_cards)
+        winners = HSEval.get_winners(hole_cards, players_folded, board_cards)
         winner_count = len(winners)
         value_per_winner = sum(pot_commitment) / winner_count
         return [value_per_winner - pot_commitment[p] if p in winners else -pot_commitment[p]

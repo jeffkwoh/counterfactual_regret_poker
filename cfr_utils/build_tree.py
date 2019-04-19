@@ -1,7 +1,7 @@
 import copy
 
 from constants import BUCKET_NUM, CALL, FOLD, RAISE
-from game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
+from cfr_utils.game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
 
 
 class GameTreeBuilder:

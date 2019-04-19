@@ -129,7 +129,7 @@ def starting_hand_evaluator(hole_cards):
 		if gap != 0:
 			strength -= 5
 	
- 	""" Add bonus for consecutives that are smaller than Queen """
+	""" Add bonus for consecutives that are smaller than Queen """
 	if gap == 1 and maxRank < 12:
 		strength += 1
 
