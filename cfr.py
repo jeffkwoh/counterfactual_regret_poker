@@ -103,6 +103,10 @@ class Cfr:
         Cfr._calculate_tree_average_strategy(self.game_tree)
 
     def _cfr(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
+        """
+        An enactment of polymorphism here that checks the type of the current node and
+        calls its respective function in a recursive manner.
+        """
         node_type = type(nodes[0])
         if node_type == TerminalNode:
             return self._cfr_terminal(
@@ -143,11 +147,8 @@ class Cfr:
         next_hole_cards = []
 
         for p in range(self.player_count):
-            next_hole_cards.append(
-                deck.draw_cards(num_hole_cards))  # Draw_cards is a mutating function with side effects
+            next_hole_cards.append(deck.draw_cards(num_hole_cards))
 
-        # TODO: The key for next nodes need to correspond to the new key for the buckets.
-        # TODO: Why do we key into the opponent's nodes as well?
         next_nodes = [node.children[self._get_bucket_key(hole_cards=next_hole_cards[p])]
                       for p, node in enumerate(nodes)]
 
@@ -155,6 +156,10 @@ class Cfr:
                          players_folded)
 
     def _get_bucket_key(self, hole_cards, community_cards=[]):
+        """
+        Calculates 2-card hand evaluation if at 'preflop' street or 5,6,7-card hand evaluation
+        otherwise. Based on the hand value evaluated, returns the correct bucket number it belongs to.
+        """
         if not community_cards:
             return HSEval.get_bucket_number(list(map(lambda x: x.__str__(), hole_cards)))
         else:
@@ -169,17 +174,16 @@ class Cfr:
         new_board_cards = deck.draw_cards(num_board_cards)
         all_board_cards = board_cards + new_board_cards
 
-        # TODO: Check if the hole_cards here belong to the player , need tracing through the code. check hole_cards[0]
-        next_nodes = [node.children[self._get_bucket_key(hole_cards=hole_cards[0], community_cards=all_board_cards)]
+        next_nodes = [node.children[self._get_bucket_key(hole_cards=hole_cards[0], 
+                                                         community_cards=all_board_cards)]
                       for p, node in enumerate(nodes)]
 
         return self._cfr(next_nodes, reach_probs, hole_cards, all_board_cards,
                          deck, players_folded)
 
-    # TODO: Understand calculation of updated strategy probabilities.
     @staticmethod
     def _update_node_strategy(node, realization_weight):
-        """Update node strategy by normalizing regret sums."""
+        """ Update node strategy by normalizing regret sums. """
         normalizing_sum = 0
         for a in range(NUM_ACTIONS):
             node.strategy[a] = node.regret_sum[a] if node.regret_sum[a] > 0 else 0
@@ -196,6 +200,14 @@ class Cfr:
             node.strategy_sum[a] += realization_weight * node.strategy[a]
 
     def _cfr_action(self, nodes, reach_probs, hole_cards, board_cards, deck, players_folded):
+        """ 
+        Follows CS3243 game logic requirements for what actions can be taken at the moment.
+        Returns the utility values for each player in the game based on utility values generated
+        recursively down the game tree.
+        
+        This recursive process can also be achieved using multiple threads, if 'joblib' is installed. 
+        """
+
         node_player = nodes[0].player
         node = nodes[node_player]
         Cfr._update_node_strategy(node, reach_probs[node_player])
@@ -204,7 +216,6 @@ class Cfr:
         node_util = [0] * self.player_count
 
         try:
-            """ use multiprocessing here, if joblib is installed. """
             jobs_result = Parallel(n_jobs=-1)(delayed(self._cfr_action_process)
                         (nodes, reach_probs, node_player, hole_cards, board_cards, 
                         deck, strategy, a, players_folded) for a in node.children)
@@ -218,7 +229,6 @@ class Cfr:
             util[action] = action_util
             for player in range(self.player_count):
                 node_util[player] += strategy[action] * action_util[player]
-
 
         for a in node.children:
             regret = util[a][node_player] - node_util[node_player]
