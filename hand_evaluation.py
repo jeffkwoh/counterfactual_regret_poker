@@ -92,7 +92,7 @@ def starting_hand_evaluator(hole_cards):
 	maxRank = max(c1.rank, c2.rank)
 	strength = 0
 	
-	# High card
+	""" Factoring high card in. """
 	if maxRank == 14: #Ace
 		strength += 10
 	elif maxRank == 13: #King
@@ -104,18 +104,18 @@ def starting_hand_evaluator(hole_cards):
 	else:
 		strength += maxRank / 2.0
 	
-	# Pairs
+	""" Factoring Pairs in. """
 	if c1.rank == c2.rank:
 		minimum = 5
 		if c1.rank == 5: #Five
 			minimum = 6
 		strength = max(strength * 2, minimum);
 	
-	# Suited
+	""" Factoring Suited in. """
 	if c1.suit == c2.suit:
 		strength += 2
 
-	# Closeness
+	""" Factoring Closeness in. """
 	gap = int(math.fabs(c1.rank - c2.rank))
 	if gap == 1:
 		strength += 1
@@ -129,7 +129,7 @@ def starting_hand_evaluator(hole_cards):
 		if gap != 0:
 			strength -= 5
 	
- 	# Bonus for consecutive and Smaller than Queen
+ 	""" Add bonus for consecutives that are smaller than Queen """
 	if gap == 1 and maxRank < 12:
 		strength += 1
 
