@@ -1,14 +1,15 @@
-import operator
 import copy
-from functools import reduce
 import math
+import operator
+from functools import reduce
 
-from build_tree import GameTreeBuilder
-from constants import NUM_ACTIONS
-from game_tree import HoleCardsNode, TerminalNode, ActionNode, BoardCardsNode
-from hand_evaluation import get_winners
-from pypokerengine.utils.card_utils import estimate_hole_card_win_rate, gen_deck
 import hand_evaluation as HSEval
+from build_tree import GameTreeBuilder
+from constants import NUM_ACTIONS, FOLD
+from game_tree import ActionNode, BoardCardsNode, HoleCardsNode, TerminalNode
+from hand_evaluation import get_winners
+from pypokerengine.utils.card_utils import (estimate_hole_card_win_rate,
+                                            gen_deck)
 
 try:
     from joblib import Parallel, delayed
@@ -170,13 +171,12 @@ class Cfr:
         deck = copy.deepcopy(deck)
         num_board_cards = nodes[0].card_count
         if any(isinstance(el, list) for el in board_cards):
-            board_cards = [item for sublist in board_cards for item in sublist]  # flatten the list of sublists
+            board_cards = [item for sublist in board_cards for item in sublist]
         new_board_cards = deck.draw_cards(num_board_cards)
         all_board_cards = board_cards + new_board_cards
 
         next_nodes = [node.children[self._get_bucket_key(hole_cards=hole_cards[0], 
-                                                         community_cards=all_board_cards)]
-                      for p, node in enumerate(nodes)]
+                        community_cards=all_board_cards)] for p, node in enumerate(nodes)]
 
         return self._cfr(next_nodes, reach_probs, hole_cards, all_board_cards,
                          deck, players_folded)
@@ -207,7 +207,6 @@ class Cfr:
         
         This recursive process can also be achieved using multiple threads, if 'joblib' is installed. 
         """
-
         node_player = nodes[0].player
         node = nodes[node_player]
         Cfr._update_node_strategy(node, reach_probs[node_player])
@@ -244,12 +243,12 @@ class Cfr:
         next_reach_probs = list(reach_probs)
         next_reach_probs[node_player] *= strategy[a]
 
-        if a == 0:
+        if a == FOLD:
             next_players_folded = list(players_folded)
             next_players_folded[node_player] = True
         else:
             next_players_folded = players_folded
-            
+        
         """ Recursively calculates cfr """
         action_util = self._cfr(
             [node.children[a] for node in nodes], next_reach_probs,
